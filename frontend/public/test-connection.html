@@ -51,7 +51,7 @@
 
     <script>
         const hostname = window.location.hostname;
-        const backendPort = 8081;
+        const backendPort = 8082;
         const backendUrl = `http://${hostname}:${backendPort}`;
         
         document.getElementById('backend-url').textContent = backendUrl;
@@ -81,7 +81,7 @@
                 statusEl.innerHTML += '<br><br><strong>Possible fixes:</strong><ul>' +
                     '<li>Make sure both devices are on the same WiFi network</li>' +
                     '<li>Run allow-backend-firewall.bat as Administrator on your computer</li>' +
-                    '<li>Check if backend is running on port 8081</li></ul>';
+                    '<li>Check if backend is running on port 8082</li></ul>';
             }
         }
 

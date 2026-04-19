@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { LoginButton } from './components/LoginButton';
 import { LoginPage } from './pages/LoginPage';
@@ -8,13 +8,15 @@ import { TicketsPage } from './pages/TicketsPage';
 import { QRVerificationPage } from './pages/QRVerificationPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import RoleSelectionPage from './pages/RoleSelectionPage';
+import { LandingPage } from './pages/LandingPage';
 import { Bell } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from './api/axios';
 
-function App() {
+function AppContent() {
   const { user, loading } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
 
   useEffect(() => {
     if (user) {
@@ -43,9 +45,11 @@ function App() {
     </div>
   );
 
+  const isLandingPage = location.pathname === '/';
+
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-gray-50 text-gray-900 w-full relative">
+    <div className="min-h-screen bg-gray-50 text-gray-900 w-full relative">
+      {!isLandingPage && (
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40 w-full">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -76,31 +80,40 @@ function App() {
             </div>
           </div>
         </header>
+      )}
 
-        <main className="w-full">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/verify-qr" element={<QRVerificationPage />} />
-            <Route path="/select-role" element={<RoleSelectionPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            
-            {/* Protected routes - require login */}
-            {!user ? (
-              <Route path="*" element={<LoginPage />} />
-            ) : (
-              <>
-                <Route path="/" element={<ResourcesPage />} />
-                <Route path="/resources" element={<ResourcesPage />} />
-                <Route path="/bookings" element={<BookingsPage />} />
-                <Route path="/tickets" element={<TicketsPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-              </>
-            )}
-          </Routes>
-        </main>
-      </div>
+      <main className="w-full">
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/verify-qr" element={<QRVerificationPage />} />
+          <Route path="/select-role" element={<RoleSelectionPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Protected routes - require login */}
+          {!user ? (
+            <Route path="*" element={<LoginPage />} />
+          ) : (
+            <>
+              <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/bookings" element={<BookingsPage />} />
+              <Route path="/tickets" element={<TicketsPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+            </>
+          )}
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }
 
 export default App;
+

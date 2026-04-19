@@ -9,6 +9,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,6 +19,8 @@ import java.util.Set;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
     private final UserRepository userRepository;
     private final Set<String> adminEmails;
@@ -41,16 +45,25 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String googleId = oAuth2User.getAttribute("sub");
         String picture = oAuth2User.getAttribute("picture");
 
+        log.info("=== CustomOAuth2UserService: Google user data ===");
+        log.info("Email (normalized): {}, Name: {}, GoogleId: {}", email, name, googleId);
+
+        if (email == null || email.isBlank()) {
+            log.error("Google did not return an email - cannot save user!");
+            throw new OAuth2AuthenticationException("no_email");
+        }
+
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
+            log.info("Existing user found: {}, role: {}", existingUser.getEmail(), existingUser.getRole());
             existingUser.setName(name);
             existingUser.setAvatarUrl(picture);
             existingUser.setRole(isAdminEmail(email) ? Role.ADMIN : existingUser.getRole());
-            // Updating existing user
             userRepository.save(existingUser);
+            log.info("Existing user updated in MongoDB");
         } else {
-            // Registering a new user via OAuth
+            log.info("New user - creating account for: {}", email);
             User newUser = User.builder()
                     .email(email)
                     .name(name)
@@ -59,6 +72,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .role(isAdminEmail(email) ? Role.ADMIN : Role.USER)
                     .build();
             userRepository.save(newUser);
+            log.info("New user saved to MongoDB with role: {}", newUser.getRole());
         }
 
         return oAuth2User;

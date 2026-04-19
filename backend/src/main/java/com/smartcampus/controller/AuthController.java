@@ -44,14 +44,17 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal OAuth2User principal) {
         if (principal == null) {
-            return ResponseEntity.status(204).build();
+            return ResponseEntity.status(401).build();
         }
 
         String email = principal.getAttribute("email");
-        Optional<User> user = userRepository.findByEmail(email);
+        if (email == null) {
+            return ResponseEntity.status(401).build();
+        }
 
+        Optional<User> user = userRepository.findByEmail(normalizeEmail(email));
         return user.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(404).body((User) null));
+                .orElseGet(() -> ResponseEntity.status(404).build());
     }
 
     @PostMapping("/signup")
@@ -108,35 +111,39 @@ public class AuthController {
     public ResponseEntity<?> selectRole(@AuthenticationPrincipal OAuth2User principal,
             @RequestBody Map<String, String> request) {
         if (principal == null) {
-            return ResponseEntity.status(401).body("Not authenticated");
+            return ResponseEntity.status(401).body(Map.of("message", "Not authenticated. Please log in first."));
         }
 
-        String email = principal.getAttribute("email");
+        String rawEmail = principal.getAttribute("email");
         String roleName = request.get("role");
 
-        if (email == null || roleName == null) {
-            return ResponseEntity.badRequest().body("Email and role are required");
+        if (rawEmail == null || roleName == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email and role are required"));
         }
+
+        String email = normalizeEmail(rawEmail);
 
         Role role;
         try {
             role = Role.valueOf(roleName.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid role");
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid role: " + roleName));
         }
 
         if (role == Role.ADMIN && !isAdminEmail(email)) {
-            return ResponseEntity.status(403).body("Admin role is restricted to approved admin emails");
+            return ResponseEntity.status(403).body(Map.of("message", "Admin role is restricted to approved admin emails"));
         }
 
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             user.setRole(role);
-            userRepository.save(user);
-            return ResponseEntity.ok(user);
+            User saved = userRepository.save(user);
+            // Return fresh JWT so frontend can update its token with the new role
+            String newToken = jwtUtil.generateToken(saved);
+            return ResponseEntity.ok(Map.of("user", saved, "token", newToken));
         } else {
-            return ResponseEntity.status(404).body("User not found");
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
         }
     }
 

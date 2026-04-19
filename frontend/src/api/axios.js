@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:8081',
+    baseURL: 'http://localhost:8082',
     withCredentials: true, // Required for session/cookies
     timeout: 10000, // 10 second timeout
 });
@@ -13,9 +13,9 @@ axiosInstance.interceptors.request.use(
         // Dynamically set baseURL based on frontend URL
         const hostname = window.location.hostname;
         if (hostname === '172.28.15.11') {
-            config.baseURL = 'http://172.28.15.11:8081';
+            config.baseURL = 'http://172.28.15.11:8082';
         } else {
-            config.baseURL = 'http://localhost:8081';
+            config.baseURL = 'http://localhost:8082';
         }
         
         // Set Content-Type to application/json for non-FormData requests
@@ -59,7 +59,7 @@ axiosInstance.interceptors.response.use(
         if (error.response) {
             console.error('📛 Error Response:', error.response.status, error.response.data);
         } else if (error.request) {
-            console.error('📛 No Response Received - Check if backend is running on http://localhost:8081');
+            console.error('📛 No Response Received - Check if backend is running on http://localhost:8082');
         }
         return Promise.reject(error);
     }
