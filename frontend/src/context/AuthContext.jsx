@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
             const res = await axios.post('/api/auth/signin', { email, password });
             localStorage.setItem('auth_token', res.data.token);
             setUser(res.data.user);
-            return res.data.user;
+            return res.data; // Return the full response (user + token)
         } catch (err) {
             throw new Error(err.response?.data?.message || 'Sign in failed');
         }
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
             const res = await axios.post('/api/auth/signup', { name, email, password, role });
             localStorage.setItem('auth_token', res.data.token);
             setUser(res.data.user);
-            return res.data.user;
+            return res.data; // Return the full response (user + token)
         } catch (err) {
             throw new Error(err.response?.data?.message || 'Sign up failed');
         }

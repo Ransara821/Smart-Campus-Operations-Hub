@@ -6,7 +6,8 @@ import com.smartcampus.repository.UserRepository;
 import com.smartcampus.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -42,12 +43,20 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal OAuth2User principal) {
-        if (principal == null) {
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
             return ResponseEntity.status(401).build();
         }
 
-        String email = principal.getAttribute("email");
+        String email = null;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof OAuth2User oauth2User) {
+            email = oauth2User.getAttribute("email");
+        } else if (principal instanceof String principalName) {
+            email = principalName;
+        }
+
         if (email == null) {
             return ResponseEntity.status(401).build();
         }
@@ -108,20 +117,28 @@ public class AuthController {
     }
 
     @PostMapping("/select-role")
-    public ResponseEntity<?> selectRole(@AuthenticationPrincipal OAuth2User principal,
+    public ResponseEntity<?> selectRole(Authentication authentication,
             @RequestBody Map<String, String> request) {
-        if (principal == null) {
+        if (authentication == null || authentication.getPrincipal() == null) {
             return ResponseEntity.status(401).body(Map.of("message", "Not authenticated. Please log in first."));
         }
 
-        String rawEmail = principal.getAttribute("email");
+        String email = null;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof OAuth2User oauth2User) {
+            email = oauth2User.getAttribute("email");
+        } else if (principal instanceof String principalName) {
+            email = principalName;
+        }
+
         String roleName = request.get("role");
 
-        if (rawEmail == null || roleName == null) {
+        if (email == null || roleName == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email and role are required"));
         }
 
-        String email = normalizeEmail(rawEmail);
+        email = normalizeEmail(email);
 
         Role role;
         try {

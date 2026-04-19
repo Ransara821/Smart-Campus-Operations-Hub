@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, GraduationCap, ArrowRight, Lock, Mail, ShieldCheck, UserPlus, Wrench } from 'lucide-react';
 import loginBg from '../assets/login-bg.png';
 
 export const LoginPage = () => {
     const { signin, signup } = useAuth();
+    const navigate = useNavigate();
     const [mode, setMode] = useState('signin');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -30,11 +32,16 @@ export const LoginPage = () => {
 
         try {
             if (isSignup) {
-                await signup({ name, email, password, role });
+                const data = await signup({ name, email, password, role });
+                // If it's a new signup, always go to role selection to confirm
+                navigate('/select-role?new=true');
             } else {
-                await signin(email, password);
+                const data = await signin(email, password);
+                // For returning users:
+                // If they are admin, they might go to resources or an admin dashboard
+                // For now, /resources is the main dashboard for all roles
+                navigate('/resources');
             }
-            window.location.href = '/';
         } catch (err) {
             setError(err.message || 'Authentication failed');
         } finally {
@@ -48,7 +55,8 @@ export const LoginPage = () => {
             if (devRole === 'ADMIN') await signin('dev-admin@smartcampus.local', 'password');
             else if (devRole === 'USER') await signin('dev-user@smartcampus.local', 'password');
             else if (devRole === 'TECHNICIAN') await signin('dev-technician@smartcampus.local', 'password');
-            window.location.href = '/';
+            
+            navigate('/resources');
         } catch (err) {
             setError(err.message || 'Dev login failed');
             setSubmitting(false);
