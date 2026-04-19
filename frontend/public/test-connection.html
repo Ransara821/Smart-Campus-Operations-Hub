@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartCampus Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status { font-weight: bold; margin: 10px 0; }
+        .success { color: green; }
+        .error { color: red; }
+        .pending { color: orange; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+    <h1>📡 SmartCampus Connection Test</h1>
+    
+    <div class="test-box">
+        <h3>Backend API Test</h3>
+        <p>Testing connection to: <code id="backend-url"></code></p>
+        <div class="status pending" id="backend-status">⏳ Waiting to test...</div>
+        <button onclick="testBackend()">Test Backend Connection</button>
+    </div>
+
+    <div class="test-box">
+        <h3>Network Information</h3>
+        <p>Your device IP: <code id="device-ip">Detecting...</code></p>
+        <p>Accessing from: <code id="hostname"></code></p>
+    </div>
+
+    <script>
+        const hostname = window.location.hostname;
+        const backendPort = 8081;
+        const backendUrl = `http://${hostname}:${backendPort}`;
+        
+        document.getElementById('backend-url').textContent = backendUrl;
+        document.getElementById('hostname').textContent = hostname;
+
+        async function testBackend() {
+            const statusEl = document.getElementById('backend-status');
+            statusEl.className = 'status pending';
+            statusEl.textContent = '⏳ Testing backend connection...';
+
+            try {
+                const response = await fetch(`${backendUrl}/api/auth/me`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok || response.status === 204) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Backend connection successful! Status: ' + response.status;
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '⚠️ Backend responded but with error: ' + response.status;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Cannot connect to backend. Error: ' + error.message;
+                statusEl.innerHTML += '<br><br><strong>Possible fixes:</strong><ul>' +
+                    '<li>Make sure both devices are on the same WiFi network</li>' +
+                    '<li>Run allow-backend-firewall.bat as Administrator on your computer</li>' +
+                    '<li>Check if backend is running on port 8081</li></ul>';
+            }
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testBackend();
+            
+            // Try to get device IP
+            fetch('https://api.ipify.org?format=json')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('device-ip').textContent = data.ip + ' (Public)';
+                })
+                .catch(() => {
+                    document.getElementById('device-ip').textContent = 'Could not detect';
+                });
+        };
+    </script>
+</body>
+</html>
