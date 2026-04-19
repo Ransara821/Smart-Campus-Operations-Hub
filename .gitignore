@@ -1,24 +1,68 @@
-# Compiled class file
-*.class
-
-# Log file
+# ===========================
+# ROOT
+# ===========================
+.env
+.env.local
+.env.*.local
 *.log
+*.bat
+*.yml~
+ngrok.yml
+start-ngrok.bat
+allow-backend-firewall.bat
 
-# BlueJ files
-*.ctxt
+# ===========================
+# BACKEND (Spring Boot / Gradle)
+# ===========================
+backend/.env
+backend/.env.*
+backend/build/
+backend/.gradle/
+backend/.apt_generated/
+backend/.apt_generated_tests/
+backend/.settings/
+backend/bin/
+backend/out/
+backend/out.txt
+backend/build.log
+backend/build_log.txt
+backend/startup.log
+backend/backend.log
+backend/uploads/
+backend/railway.json
+backend/gradlew.bat
+backend/HELP.md
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# Keep gradle wrapper (needed to build)
+!backend/gradle/
+!backend/gradlew
+!backend/gradle/wrapper/
+!backend/gradle/wrapper/gradle-wrapper.jar
+!backend/gradle/wrapper/gradle-wrapper.properties
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
+# ===========================
+# FRONTEND (React / Vite / Node)
+# ===========================
+frontend/.env
+frontend/.env.*
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.eslintcache
+
+# ===========================
+# IDE & OS
+# ===========================
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ===========================
+# MISC
+# ===========================
 *.zip
 *.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
