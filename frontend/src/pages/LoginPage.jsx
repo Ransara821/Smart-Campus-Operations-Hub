@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, GraduationCap, ArrowRight, Lock, Mail, ShieldCheck, UserPlus, Wrench } from 'lucide-react';
+import { LogIn, GraduationCap, ArrowRight, Lock, Mail, ShieldCheck, UserPlus, Wrench, CheckCircle2 } from 'lucide-react';
 import loginBg from '../assets/login-bg.png';
 
 export const LoginPage = () => {
     const { signin, signup } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [mode, setMode] = useState('signin');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -14,8 +15,17 @@ export const LoginPage = () => {
     const [role, setRole] = useState('USER');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const isSignup = mode === 'signup';
+
+    useEffect(() => {
+        if (searchParams.get('signup') === 'success') {
+            setSuccessMessage('Registration successful. Please sign in to continue.');
+            setMode('signin');
+        }
+    }, [searchParams]);
+
     const roleOptions = useMemo(() => ([
         { value: 'USER', label: 'User', icon: UserPlus, description: 'Book facilities and raise tickets' },
         { value: 'TECHNICIAN', label: 'Technician', icon: Wrench, description: 'Manage maintenance tickets' }
@@ -29,18 +39,21 @@ export const LoginPage = () => {
         event.preventDefault();
         setSubmitting(true);
         setError('');
+        setSuccessMessage('');
 
         try {
             if (isSignup) {
-                const data = await signup({ name, email, password, role });
-                // If it's a new signup, always go to role selection to confirm
-                navigate('/select-role?new=true');
+                await signup({ name, email, password, role });
+                setSuccessMessage('Registration successful. Please sign in to continue.');
+                setMode('signin');
+                setName('');
+                setPassword('');
             } else {
-                const data = await signin(email, password);
-                // For returning users:
-                // If they are admin, they might go to resources or an admin dashboard
-                // For now, /resources is the main dashboard for all roles
-                navigate('/resources');
+                await signin(email, password);
+                setSuccessMessage('Login successful! Redirecting...');
+                setTimeout(() => {
+                    navigate('/resources');
+                }, 800);
             }
         } catch (err) {
             setError(err.message || 'Authentication failed');
@@ -176,6 +189,13 @@ export const LoginPage = () => {
                                             );
                                         })}
                                     </div>
+                                </div>
+                            )}
+
+                            {successMessage && (
+                                <div className="bg-emerald-50 text-emerald-600 px-4 py-3 rounded-xl text-sm font-bold border border-emerald-100 flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                    {successMessage}
                                 </div>
                             )}
 

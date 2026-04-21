@@ -71,9 +71,8 @@ export const AuthProvider = ({ children }) => {
     const signup = async ({ name, email, password, role }) => {
         try {
             const res = await axios.post('/api/auth/signup', { name, email, password, role });
-            localStorage.setItem('auth_token', res.data.token);
-            setUser(res.data.user);
-            return res.data; // Return the full response (user + token)
+            // Registration successful. We return the data but do NOT log the user in.
+            return res.data;
         } catch (err) {
             throw new Error(err.response?.data?.message || 'Sign up failed');
         }
