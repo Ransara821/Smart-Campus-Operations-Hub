@@ -62,19 +62,6 @@ export const LoginPage = () => {
         }
     };
 
-    const loginAsDev = async (devRole) => {
-        try {
-            setSubmitting(true);
-            if (devRole === 'ADMIN') await signin('dev-admin@smartcampus.local', 'password');
-            else if (devRole === 'USER') await signin('dev-user@smartcampus.local', 'password');
-            else if (devRole === 'TECHNICIAN') await signin('dev-technician@smartcampus.local', 'password');
-            
-            navigate('/resources');
-        } catch (err) {
-            setError(err.message || 'Dev login failed');
-            setSubmitting(false);
-        }
-    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4 sm:p-8 font-sans">
@@ -122,6 +109,31 @@ export const LoginPage = () => {
                             {isSignup ? 'Join the SmartCampus platform today.' : 'Please enter your details to sign in.'}
                         </p>
 
+                        {isSignup && (
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Join as</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {roleOptions.map((option) => {
+                                        const Icon = option.icon;
+                                        const selected = role === option.value;
+                                        return (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                onClick={() => setRole(option.value)}
+                                                className={`text-left border rounded-xl p-3 transition-all ${selected ? 'border-purple-500 bg-purple-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-white'}`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className={`w-4 h-4 ${selected ? 'text-purple-700' : 'text-gray-500'}`} />
+                                                    <span className="font-bold text-gray-800 text-xs">{option.label}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {isSignup && (
                                 <div>
@@ -167,30 +179,6 @@ export const LoginPage = () => {
                                 </div>
                             </div>
 
-                            {isSignup && (
-                                <div className="pt-2">
-                                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Join as</label>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {roleOptions.map((option) => {
-                                            const Icon = option.icon;
-                                            const selected = role === option.value;
-                                            return (
-                                                <button
-                                                    key={option.value}
-                                                    type="button"
-                                                    onClick={() => setRole(option.value)}
-                                                    className={`text-left border rounded-xl p-3 transition-all ${selected ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-white'}`}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <Icon className={`w-4 h-4 ${selected ? 'text-purple-700' : 'text-gray-500'}`} />
-                                                        <span className="font-bold text-gray-800 text-sm">{option.label}</span>
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
 
                             {successMessage && (
                                 <div className="bg-emerald-50 text-emerald-600 px-4 py-3 rounded-xl text-sm font-bold border border-emerald-100 flex items-center gap-2">
@@ -233,37 +221,6 @@ export const LoginPage = () => {
                             Google
                         </button>
 
-                        <div className="mt-8 pt-6 border-t border-gray-100">
-                            <div className="relative mb-4">
-                                <div className="relative flex justify-center text-[10px]">
-                                    <span className="px-3 bg-white text-gray-400 font-bold uppercase tracking-widest">Quick Login (Demo)</span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => loginAsDev('ADMIN')}
-                                    className="px-2 py-2 text-[11px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-center"
-                                >
-                                    Admin
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => loginAsDev('USER')}
-                                    className="px-2 py-2 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors text-center"
-                                >
-                                    User
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => loginAsDev('TECHNICIAN')}
-                                    className="px-2 py-2 text-[11px] font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-center"
-                                >
-                                    Tech
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
