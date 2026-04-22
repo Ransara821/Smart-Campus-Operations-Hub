@@ -8,6 +8,7 @@ import { QRVerificationPage } from './pages/QRVerificationPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import { LandingPage } from './pages/LandingPage';
+import { AboutUsPage } from './pages/AboutUsPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { UsersPage } from './pages/UsersPage';
 import {
@@ -165,7 +166,7 @@ function AppContent() {
     </div>
   );
 
-  const isPublicPage = ['/', '/login', '/select-role', '/verify-qr'].includes(location.pathname);
+  const isPublicPage = ['/', '/about-us', '/login', '/select-role', '/verify-qr'].includes(location.pathname);
   const showLayout = user && !isPublicPage;
 
   if (showLayout) {
@@ -200,6 +201,7 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/"            element={<LandingPage />} />
+      <Route path="/about-us"    element={<AboutUsPage />} />
       <Route path="/login"       element={<LoginPage />} />
       <Route path="/select-role" element={<RoleSelectionPage />} />
       <Route path="/verify-qr"   element={<QRVerificationPage />} />

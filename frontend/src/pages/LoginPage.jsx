@@ -267,13 +267,17 @@ export const LoginPage = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent" />
                     <div className="relative z-10 text-center mt-auto mb-10 w-full px-8">
-                        <div className="bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mx-auto max-w-sm">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/')}
+                            className="bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mx-auto max-w-sm transition hover:-translate-y-0.5 hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)]"
+                        >
                             <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl mb-4 shadow-sm transform -rotate-3">
                                 <GraduationCap className="w-7 h-7 text-white" />
                             </div>
                             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">SmartCampus</h1>
                             <p className="text-sm font-bold text-gray-500 mt-1 uppercase tracking-widest">Operations Hub</p>
-                        </div>
+                        </button>
                     </div>
                 </div>
 
