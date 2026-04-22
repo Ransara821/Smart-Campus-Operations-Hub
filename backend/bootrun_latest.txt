@@ -311,3 +311,493 @@ Caused by: java.net.SocketTimeoutException: Read timed out
 	... 10 common frames omitted
 
 2026-04-21T21:35:39.522+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, type=REPLICA_SET_SECONDARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=25, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=570645000, setName='atlas-72alhc-shard-0', canonicalAddress=ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, hosts=[ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017], passives=[], arbiters=[], primary='ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017', tagSet=TagSet{[Tag{name='availabilityZone', value='aps1-az2'}, Tag{name='cacheState', value='READY'}, Tag{name='diskState', value='READY'}, Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='AWS'}, Tag{name='region', value='AP_SOUTH_1'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=null, setVersion=317, topologyVersion=TopologyVersion{processId=69e7a01d9f19c41bd64f1f3d, counter=3}, lastWriteDate=Tue Apr 21 21:35:39 IST 2026, lastUpdateTimeNanos=145254715834900}
+2026-04-22T09:46:58.034+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketReadException: Exception receiving message
+	at com.mongodb.internal.connection.InternalStreamConnection.translateReadException(InternalStreamConnection.java:730) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:606) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveCommandMessageResponse(InternalStreamConnection.java:451) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receive(InternalStreamConnection.java:404) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:224) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:328) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:355) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:808) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:966) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:484) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:478) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1461) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:1065) ~[na:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:175) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:200) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveResponseBuffers(InternalStreamConnection.java:739) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:603) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 5 common frames omitted
+
+2026-04-22T09:46:58.651+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017, type=REPLICA_SET_SECONDARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=25, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=411412000, setName='atlas-72alhc-shard-0', canonicalAddress=ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017, hosts=[ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017], passives=[], arbiters=[], primary='ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017', tagSet=TagSet{[Tag{name='availabilityZone', value='aps1-az1'}, Tag{name='cacheState', value='READY'}, Tag{name='diskState', value='READY'}, Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='AWS'}, Tag{name='region', value='AP_SOUTH_1'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=null, setVersion=317, topologyVersion=TopologyVersion{processId=69e79f7b1c3603736dd1a0c9, counter=4}, lastWriteDate=Wed Apr 22 09:46:58 IST 2026, lastUpdateTimeNanos=189133870513700}
+2026-04-22T09:46:59.316+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketReadException: Exception receiving message
+	at com.mongodb.internal.connection.InternalStreamConnection.translateReadException(InternalStreamConnection.java:730) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:606) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveCommandMessageResponse(InternalStreamConnection.java:451) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receive(InternalStreamConnection.java:404) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:224) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:328) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:355) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:808) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:966) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:484) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:478) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1461) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:1065) ~[na:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:175) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:200) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveResponseBuffers(InternalStreamConnection.java:739) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:603) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 5 common frames omitted
+
+2026-04-22T09:46:59.987+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, type=REPLICA_SET_SECONDARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=25, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=468779800, setName='atlas-72alhc-shard-0', canonicalAddress=ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, hosts=[ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017], passives=[], arbiters=[], primary='ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017', tagSet=TagSet{[Tag{name='availabilityZone', value='aps1-az2'}, Tag{name='cacheState', value='READY'}, Tag{name='diskState', value='READY'}, Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='AWS'}, Tag{name='region', value='AP_SOUTH_1'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=null, setVersion=317, topologyVersion=TopologyVersion{processId=69e7a01d9f19c41bd64f1f3d, counter=3}, lastWriteDate=Wed Apr 22 09:46:59 IST 2026, lastUpdateTimeNanos=189135211411600}
+2026-04-22T09:47:01.310+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketReadException: Exception receiving message
+	at com.mongodb.internal.connection.InternalStreamConnection.translateReadException(InternalStreamConnection.java:730) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:606) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveCommandMessageResponse(InternalStreamConnection.java:451) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receive(InternalStreamConnection.java:404) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:224) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:328) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:355) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:808) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:966) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:484) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:478) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1461) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:1065) ~[na:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:175) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:200) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveResponseBuffers(InternalStreamConnection.java:739) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:603) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 5 common frames omitted
+
+2026-04-22T09:47:02.183+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, type=REPLICA_SET_PRIMARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=25, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=470232300, setName='atlas-72alhc-shard-0', canonicalAddress=ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, hosts=[ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017], passives=[], arbiters=[], primary='ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017', tagSet=TagSet{[Tag{name='availabilityZone', value='aps1-az3'}, Tag{name='cacheState', value='READY'}, Tag{name='diskState', value='READY'}, Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='AWS'}, Tag{name='region', value='AP_SOUTH_1'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=7fffffff000000000000012c, setVersion=317, topologyVersion=TopologyVersion{processId=69e79fcccfc84f5f0c903dc9, counter=6}, lastWriteDate=Wed Apr 22 09:47:01 IST 2026, lastUpdateTimeNanos=189137398307100}
+2026-04-22T09:47:02.183+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Discovered replica set primary ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017 with max election id 7fffffff000000000000012c and max set version 317
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+? Fetching bookings for user oshadha katukurunda: 0 found
+2026-04-22T10:37:18.631+05:30  WARN 16184 --- [backend] [0.0-8082-exec-5] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to write: java.io.IOException: An established connection was aborted by the software in your host machine]
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+? Fetching all bookings: 1 found
+  - Booking 69e4c0720112b3e468aab39e: status=APPROVED, qrData=? (ca45805a-f817-4e56-8b63-4af4ce885bc9-69e4bfe10112b3e468aab39d)
+? Fetching attendance for booking: 69e4c0720112b3e468aab39e
+   Resource: ee
+   Status: APPROVED
+   Attendance: 0/3
+2026-04-23T00:17:40.661+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketReadException: Exception receiving message
+	at com.mongodb.internal.connection.InternalStreamConnection.translateReadException(InternalStreamConnection.java:730) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:606) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveCommandMessageResponse(InternalStreamConnection.java:451) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receive(InternalStreamConnection.java:404) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:224) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:328) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:355) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:808) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:966) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:484) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:478) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1461) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:1065) ~[na:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:175) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:200) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveResponseBuffers(InternalStreamConnection.java:739) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:603) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 5 common frames omitted
+
+2026-04-23T00:17:40.661+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketReadException: Exception receiving message
+	at com.mongodb.internal.connection.InternalStreamConnection.translateReadException(InternalStreamConnection.java:730) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:606) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveCommandMessageResponse(InternalStreamConnection.java:451) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receive(InternalStreamConnection.java:404) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:224) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:328) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:355) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:808) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:966) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:484) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:478) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1461) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:1065) ~[na:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:175) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:200) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveResponseBuffers(InternalStreamConnection.java:739) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:603) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 5 common frames omitted
+
+2026-04-23T00:17:40.661+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketReadException: Exception receiving message
+	at com.mongodb.internal.connection.InternalStreamConnection.translateReadException(InternalStreamConnection.java:730) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:606) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveCommandMessageResponse(InternalStreamConnection.java:451) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receive(InternalStreamConnection.java:404) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:224) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:328) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:355) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:808) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:966) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:484) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:478) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1461) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:1065) ~[na:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:175) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.read(SocketStream.java:200) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveResponseBuffers(InternalStreamConnection.java:739) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.receiveMessageWithAdditionalTimeout(InternalStreamConnection.java:603) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 5 common frames omitted
+
+2026-04-23T00:17:40.680+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketException: No such host is known (ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net)
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:221) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.ServerAddressWithResolver.getSocketAddresses(ServerAddressWithResolver.java:68) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.initializeSocket(SocketStream.java:100) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.open(SocketStream.java:78) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.open(InternalStreamConnection.java:211) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:196) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.UnknownHostException: No such host is known (ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net)
+	at java.base/java.net.Inet6AddressImpl.lookupAllHostAddr(Native Method) ~[na:na]
+	at java.base/java.net.InetAddress$PlatformNameService.lookupAllHostAddr(InetAddress.java:933) ~[na:na]
+	at java.base/java.net.InetAddress.getAddressesFromNameService(InetAddress.java:1543) ~[na:na]
+	at java.base/java.net.InetAddress$NameServiceAddresses.get(InetAddress.java:852) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName0(InetAddress.java:1532) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1384) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1305) ~[na:na]
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:213) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 7 common frames omitted
+
+2026-04-23T00:17:40.680+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketException: No such host is known (ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net)
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:221) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.ServerAddressWithResolver.getSocketAddresses(ServerAddressWithResolver.java:68) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.initializeSocket(SocketStream.java:100) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.open(SocketStream.java:78) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.open(InternalStreamConnection.java:211) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:196) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.UnknownHostException: No such host is known (ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net)
+	at java.base/java.net.Inet6AddressImpl.lookupAllHostAddr(Native Method) ~[na:na]
+	at java.base/java.net.InetAddress$PlatformNameService.lookupAllHostAddr(InetAddress.java:933) ~[na:na]
+	at java.base/java.net.InetAddress.getAddressesFromNameService(InetAddress.java:1543) ~[na:na]
+	at java.base/java.net.InetAddress$NameServiceAddresses.get(InetAddress.java:852) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName0(InetAddress.java:1532) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1384) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1305) ~[na:na]
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:213) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 7 common frames omitted
+
+2026-04-23T00:17:40.681+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketOpenException: Exception opening socket
+	at com.mongodb.internal.connection.SocketStream.lambda$open$0(SocketStream.java:84) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403) ~[na:na]
+	at com.mongodb.internal.connection.SocketStream.open(SocketStream.java:84) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.open(InternalStreamConnection.java:211) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:196) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.NoRouteToHostException: No route to host: no further information
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[na:na]
+	at java.base/java.net.Socket.connect(Socket.java:633) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:304) ~[na:na]
+	at com.mongodb.internal.connection.SocketStreamHelper.initialize(SocketStreamHelper.java:76) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.initializeSocket(SocketStream.java:104) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.open(SocketStream.java:78) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 4 common frames omitted
+
+2026-04-23T00:17:50.699+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketException: ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:221) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.ServerAddressWithResolver.getSocketAddresses(ServerAddressWithResolver.java:68) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.initializeSocket(SocketStream.java:100) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.open(SocketStream.java:78) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.open(InternalStreamConnection.java:211) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:196) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.UnknownHostException: ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net
+	at java.base/java.net.InetAddress$CachedAddresses.get(InetAddress.java:801) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName0(InetAddress.java:1532) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1384) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1305) ~[na:na]
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:213) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 7 common frames omitted
+
+2026-04-23T00:18:00.711+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017
+
+com.mongodb.MongoSocketException: No such host is known (ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net)
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:221) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.ServerAddressWithResolver.getSocketAddresses(ServerAddressWithResolver.java:68) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.initializeSocket(SocketStream.java:100) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.SocketStream.open(SocketStream.java:78) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.InternalStreamConnection.open(InternalStreamConnection.java:211) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.lookupServerDescription(DefaultServerMonitor.java:196) ~[mongodb-driver-core-4.11.1.jar:na]
+	at com.mongodb.internal.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:156) ~[mongodb-driver-core-4.11.1.jar:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: java.net.UnknownHostException: No such host is known (ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net)
+	at java.base/java.net.Inet6AddressImpl.lookupAllHostAddr(Native Method) ~[na:na]
+	at java.base/java.net.InetAddress$PlatformNameService.lookupAllHostAddr(InetAddress.java:933) ~[na:na]
+	at java.base/java.net.InetAddress.getAddressesFromNameService(InetAddress.java:1543) ~[na:na]
+	at java.base/java.net.InetAddress$NameServiceAddresses.get(InetAddress.java:852) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName0(InetAddress.java:1532) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1384) ~[na:na]
+	at java.base/java.net.InetAddress.getAllByName(InetAddress.java:1305) ~[na:na]
+	at com.mongodb.ServerAddress.getSocketAddresses(ServerAddress.java:213) ~[mongodb-driver-core-4.11.1.jar:na]
+	... 7 common frames omitted
+
+2026-04-23T00:18:31.485+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, type=REPLICA_SET_SECONDARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=25, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=430441700, setName='atlas-72alhc-shard-0', canonicalAddress=ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, hosts=[ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017], passives=[], arbiters=[], primary='ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017', tagSet=TagSet{[Tag{name='availabilityZone', value='aps1-az2'}, Tag{name='cacheState', value='READY'}, Tag{name='diskState', value='READY'}, Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='AWS'}, Tag{name='region', value='AP_SOUTH_1'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=null, setVersion=317, topologyVersion=TopologyVersion{processId=69e7a01d9f19c41bd64f1f3d, counter=3}, lastWriteDate=Thu Apr 23 00:18:30 IST 2026, lastUpdateTimeNanos=241426712245100}
+2026-04-23T00:18:31.485+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017, type=REPLICA_SET_SECONDARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=25, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=431208000, setName='atlas-72alhc-shard-0', canonicalAddress=ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017, hosts=[ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017], passives=[], arbiters=[], primary='ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017', tagSet=TagSet{[Tag{name='availabilityZone', value='aps1-az1'}, Tag{name='cacheState', value='READY'}, Tag{name='diskState', value='READY'}, Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='AWS'}, Tag{name='region', value='AP_SOUTH_1'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=null, setVersion=317, topologyVersion=TopologyVersion{processId=69e79f7b1c3603736dd1a0c9, counter=4}, lastWriteDate=Thu Apr 23 00:18:30 IST 2026, lastUpdateTimeNanos=241426712701000}
+2026-04-23T00:18:31.485+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, type=REPLICA_SET_PRIMARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=25, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=432729000, setName='atlas-72alhc-shard-0', canonicalAddress=ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, hosts=[ac-gtozfjp-shard-00-02.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017, ac-gtozfjp-shard-00-00.cgmi5se.mongodb.net:27017], passives=[], arbiters=[], primary='ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017', tagSet=TagSet{[Tag{name='availabilityZone', value='aps1-az3'}, Tag{name='cacheState', value='READY'}, Tag{name='diskState', value='READY'}, Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='AWS'}, Tag{name='region', value='AP_SOUTH_1'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=7fffffff000000000000012c, setVersion=317, topologyVersion=TopologyVersion{processId=69e79fcccfc84f5f0c903dc9, counter=6}, lastWriteDate=Thu Apr 23 00:18:30 IST 2026, lastUpdateTimeNanos=241426720022000}
+2026-04-23T00:18:31.485+05:30  INFO 16184 --- [backend] [ngodb.net:27017] org.mongodb.driver.cluster               : Discovered replica set primary ac-gtozfjp-shard-00-01.cgmi5se.mongodb.net:27017 with max election id 7fffffff000000000000012c and max set version 317
