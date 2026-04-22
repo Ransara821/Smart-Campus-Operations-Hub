@@ -53,15 +53,13 @@ export const TicketsPage = () => {
                         {user.role === 'TECHNICIAN' ? 'Assigned Tickets' :
                             user.role === 'ADMIN' ? 'All Tickets' : 'My Tickets'}
                     </h1>
-                    {user.role === 'USER' && (
-                        <button
-                            onClick={handleCreateNew}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-white/70 hover:bg-white border border-white text-purple-700 rounded-2xl backdrop-blur-xl transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-sm group"
-                        >
-                            <Plus className="w-5 h-5 text-purple-500 group-hover:scale-110 transition-transform" />
-                            <span className="font-bold">Raise Issue</span>
-                        </button>
-                    )}
+                    <button
+                        onClick={handleCreateNew}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white/70 hover:bg-white border border-white text-purple-700 rounded-2xl backdrop-blur-xl transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-sm group"
+                    >
+                        <Plus className="w-5 h-5 text-purple-500 group-hover:scale-110 transition-transform" />
+                        <span className="font-bold">Raise Issue</span>
+                    </button>
                 </div>
 
                 {loading ? (
