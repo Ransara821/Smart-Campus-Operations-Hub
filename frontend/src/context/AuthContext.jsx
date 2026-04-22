@@ -57,29 +57,92 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const signin = async (email, password) => {
+    const getAuthErrorMessage = (err, fallbackMessage) => {
+        if (err.response?.data?.message) {
+            return err.response.data.message;
+        }
+
+        if (err.code === 'ECONNABORTED') {
+            return 'The server took too long to respond. Please try again.';
+        }
+
+        if (err.request) {
+            return 'Cannot connect to the backend server at http://localhost:8082. Please start the backend and try again.';
+        }
+
+        return fallbackMessage;
+    };
+
+    const otpRequestConfig = {
+        timeout: 30000,
+    };
+
+    /**
+     * Step 1 — Submit credentials. Backend validates them and sends OTP to the user's email.
+     * Returns the response data ({ message, email, step }) on success.
+     */
+    const requestOtp = async ({ name, email, password, role, mode }) => {
         try {
-            const res = await axios.post('/api/auth/signin', { email, password });
+            const endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin';
+            const payload = mode === 'signup'
+                ? { name, email, password, role }
+                : { email, password };
+            const res = await axios.post(endpoint, payload, otpRequestConfig);
+            if (res.data?.token && res.data?.user) {
+                localStorage.setItem('auth_token', res.data.token);
+                setUser(res.data.user);
+            }
+            return res.data; // { message, email, step: 'otp_required' }
+        } catch (err) {
+            throw new Error(getAuthErrorMessage(err, 'Authentication failed'));
+        }
+    };
+
+    /**
+     * Step 2 — Verify OTP. Backend checks the code and returns JWT + user on success.
+     * Stores the token and sets the user in context.
+     */
+    const verifyOtp = async ({ email, otp, mode }) => {
+        try {
+            const endpoint = mode === 'signup'
+                ? '/api/auth/signup/verify-otp'
+                : '/api/auth/signin/verify-otp';
+            const res = await axios.post(endpoint, { email, otp });
             localStorage.setItem('auth_token', res.data.token);
             setUser(res.data.user);
-            return res.data; // Return the full response (user + token)
+            return res.data;
         } catch (err) {
-            throw new Error(err.response?.data?.message || 'Sign in failed');
+            throw new Error(getAuthErrorMessage(err, 'OTP verification failed'));
         }
+    };
+
+    /**
+     * Resend OTP — generates a fresh code and emails it again.
+     */
+    const resendOtp = async ({ email, mode }) => {
+        try {
+            const res = await axios.post('/api/auth/resend-otp', { email, mode }, otpRequestConfig);
+            return res.data;
+        } catch (err) {
+            throw new Error(getAuthErrorMessage(err, 'Failed to resend OTP'));
+        }
+    };
+
+    // Legacy helpers kept for any other callers
+    const signin = async (email, password) => {
+        return requestOtp({ email, password, mode: 'signin' });
     };
 
     const signup = async ({ name, email, password, role }) => {
-        try {
-            const res = await axios.post('/api/auth/signup', { name, email, password, role });
-            // Registration successful. We return the data but do NOT log the user in.
-            return res.data;
-        } catch (err) {
-            throw new Error(err.response?.data?.message || 'Sign up failed');
-        }
+        return requestOtp({ name, email, password, role, mode: 'signup' });
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, loading, checkAuth, logout, signin, signup }}>
+        <AuthContext.Provider value={{
+            user, setUser, loading, checkAuth, logout,
+            signin, signup,
+            requestOtp, verifyOtp, resendOtp,
+        }}>
             {children}
         </AuthContext.Provider>
     );
