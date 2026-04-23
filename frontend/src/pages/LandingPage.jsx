@@ -38,6 +38,7 @@ export const LandingPage = () => {
         }
     ];
 
+    // Define the step-by-sequence for the How It Works section
     const howItWorks = [
         {
             step: "01",
