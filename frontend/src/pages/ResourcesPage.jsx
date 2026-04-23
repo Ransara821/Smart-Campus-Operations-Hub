@@ -2,25 +2,45 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { ResourceCard } from '../components/ResourceCard';
 import { ResourceForm } from '../components/ResourceForm';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, X, Filter } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const ResourcesPage = () => {
     const { user } = useAuth();
     const [resources, setResources] = useState([]);
     const [search, setSearch] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({
+        type: '',
+        minCapacity: '',
+        maxCapacity: '',
+        location: ''
+    });
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingResource, setEditingResource] = useState(null);
 
+    const resourceTypes = ['Lecture Hall', 'Lab', 'Equipment', 'Meeting Room', 'Library'];
+
     useEffect(() => {
         fetchResources();
-    }, [search]);
+    }, [search, filters]);
 
     const fetchResources = async () => {
         try {
             // Add timestamp to prevent caching
             const timestamp = new Date().getTime();
-            const res = await axios.get(`/api/resources?search=${search}&_t=${timestamp}`, { 
+            const params = new URLSearchParams({
+                search: search,
+                _t: timestamp
+            });
+
+            // Add filter parameters
+            if (filters.type) params.append('type', filters.type);
+            if (filters.minCapacity) params.append('minCapacity', filters.minCapacity);
+            if (filters.maxCapacity) params.append('maxCapacity', filters.maxCapacity);
+            if (filters.location) params.append('location', filters.location);
+
+            const res = await axios.get(`/api/resources?${params.toString()}`, { 
                 withCredentials: true,
                 headers: {
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -33,6 +53,26 @@ export const ResourcesPage = () => {
             console.error("Failed to fetch resources", error);
         }
     };
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const clearFilters = () => {
+        setFilters({
+            type: '',
+            minCapacity: '',
+            maxCapacity: '',
+            location: ''
+        });
+        setSearch('');
+    };
+
+    const hasActiveFilters = search || filters.type || filters.minCapacity || filters.maxCapacity || filters.location;
 
     const handleEdit = (resource) => {
         setEditingResource(resource);
@@ -86,7 +126,7 @@ export const ResourcesPage = () => {
                 </div>
 
                 {/* Search Bar */}
-                <div className="relative mb-10 max-w-lg">
+                <div className="relative mb-6 max-w-2xl">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Search className="text-blue-400 w-5 h-5" />
                     </div>
@@ -98,6 +138,99 @@ export const ResourcesPage = () => {
                         className="pl-12 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400 shadow-sm hover:shadow-md"
                     />
                 </div>
+
+                {/* Advanced Filters Toggle */}
+                <div className="mb-6 flex items-center gap-3">
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-lg text-gray-700 font-medium hover:border-blue-500 hover:text-blue-600 transition-all"
+                    >
+                        <Filter className="w-4 h-4" />
+                        Advanced Filters
+                    </button>
+                    {hasActiveFilters && (
+                        <button
+                            onClick={clearFilters}
+                            className="flex items-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-all text-sm"
+                        >
+                            <X className="w-4 h-4" />
+                            Clear All
+                        </button>
+                    )}
+                </div>
+
+                {/* Advanced Filters Panel */}
+                {showFilters && (
+                    <div className="mb-8 p-6 bg-white border-2 border-gray-200 rounded-xl shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Filter Resources</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Resource Type Filter */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Resource Type
+                                </label>
+                                <select
+                                    name="type"
+                                    value={filters.type}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700"
+                                >
+                                    <option value="">All Types</option>
+                                    {resourceTypes.map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Min Capacity Filter */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Min Capacity
+                                </label>
+                                <input
+                                    type="number"
+                                    name="minCapacity"
+                                    placeholder="From"
+                                    value={filters.minCapacity}
+                                    onChange={handleFilterChange}
+                                    min="0"
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400"
+                                />
+                            </div>
+
+                            {/* Max Capacity Filter */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Max Capacity
+                                </label>
+                                <input
+                                    type="number"
+                                    name="maxCapacity"
+                                    placeholder="To"
+                                    value={filters.maxCapacity}
+                                    onChange={handleFilterChange}
+                                    min="0"
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400"
+                                />
+                            </div>
+
+                            {/* Location Filter */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Location
+                                </label>
+                                <input
+                                    type="text"
+                                    name="location"
+                                    placeholder="Search location..."
+                                    value={filters.location}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Resources Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
@@ -115,7 +248,7 @@ export const ResourcesPage = () => {
                                 <Search className="w-8 h-8 text-gray-400" />
                             </div>
                             <p className="text-gray-600 text-lg font-medium">No resources found</p>
-                            <p className="text-gray-500 text-sm mt-1">Try adjusting your search or add new resources</p>
+                            <p className="text-gray-500 text-sm mt-1">Try adjusting your filters or search criteria</p>
                         </div>
                     )}
                 </div>

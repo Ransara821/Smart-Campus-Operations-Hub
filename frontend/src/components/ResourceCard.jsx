@@ -9,7 +9,7 @@ export const ResourceCard = ({ resource, onEdit, onDelete }) => {
             case 'ACTIVE': 
                 return {
                     bg: 'bg-gradient-to-r from-green-50 to-emerald-50',
-                    border: 'border-green-200',
+                    border: 'border-gray-200',
                     badge: 'bg-gradient-to-r from-green-400 to-emerald-400',
                     text: 'text-green-700',
                     icon: Check
@@ -17,7 +17,7 @@ export const ResourceCard = ({ resource, onEdit, onDelete }) => {
             case 'MAINTENANCE': 
                 return {
                     bg: 'bg-gradient-to-r from-yellow-50 to-orange-50',
-                    border: 'border-yellow-200',
+                    border: 'border-gray-200',
                     badge: 'bg-gradient-to-r from-yellow-400 to-orange-400',
                     text: 'text-yellow-700',
                     icon: AlertCircle
