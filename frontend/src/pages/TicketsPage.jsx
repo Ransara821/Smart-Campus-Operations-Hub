@@ -37,11 +37,11 @@ export const TicketsPage = () => {
 
     const getStatusIcon = (status) => {
         switch (status) {
-            case 'OPEN': return <AlertCircle className="w-5 h-5 text-blue-500" />;
-            case 'IN_PROGRESS': return <Wrench className="w-5 h-5 text-amber-500" />;
-            case 'RESOLVED': return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-            case 'CLOSED': return <CheckCircle2 className="w-5 h-5 text-emerald-600" />;
-            case 'REJECTED': return <XCircle className="w-5 h-5 text-red-500" />;
+            case 'OPEN': return <AlertCircle className="w-6 h-6 text-blue-600" />;
+            case 'IN_PROGRESS': return <Wrench className="w-6 h-6 text-amber-600" />;
+            case 'RESOLVED': return <CheckCircle2 className="w-6 h-6 text-emerald-600" />;
+            case 'CLOSED': return <CheckCircle2 className="w-6 h-6 text-slate-600" />;
+            case 'REJECTED': return <XCircle className="w-6 h-6 text-red-600" />;
             default: return null;
         }
     };
@@ -137,45 +137,82 @@ export const TicketsPage = () => {
                             {filteredTickets.map(ticket => (
                                 <li
                                     key={ticket.id}
-                                    className="hover:bg-slate-50 transition-all duration-200 cursor-pointer p-5 sm:p-6 flex justify-between items-center group relative"
+                                    className="group relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6 bg-white hover:bg-slate-50/50 cursor-pointer transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                                     onClick={() => setSelectedTicket(ticket)}
                                 >
-                                    <div className="flex items-start gap-4 sm:gap-5 flex-1">
-                                        <div className="mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm transition-all">
+                                    {/* Left Accent Bar */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
+                                        ticket.status === 'OPEN' ? 'bg-blue-500 group-hover:w-1.5' :
+                                        ticket.status === 'IN_PROGRESS' ? 'bg-amber-500 group-hover:w-1.5' :
+                                        ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-500 group-hover:w-1.5' :
+                                        ticket.status === 'REJECTED' ? 'bg-red-500 group-hover:w-1.5' : 
+                                        'bg-slate-300 group-hover:w-1.5'
+                                    }`}></div>
+
+                                    <div className="flex items-start gap-4 sm:gap-5 flex-1 pl-2 w-full">
+                                        <div className={`mt-0.5 p-3 rounded-2xl border transition-all duration-300 shadow-sm group-hover:shadow group-hover:-translate-y-0.5 ${
+                                                ticket.status === 'OPEN' ? 'bg-blue-50 border-blue-100' :
+                                                ticket.status === 'IN_PROGRESS' ? 'bg-amber-50 border-amber-100' :
+                                                ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-50 border-emerald-100' :
+                                                ticket.status === 'REJECTED' ? 'bg-red-50 border-red-100' : 
+                                                'bg-slate-50 border-slate-100'
+                                            }`}>
                                             {getStatusIcon(ticket.status)}
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-slate-900 mb-1.5 group-hover:text-blue-600 transition-colors">{ticket.title}</h3>
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <p className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-1 rounded-md">
-                                                    {ticket.resourceName || 'General Campus'} 
-                                                </p>
-                                                <span className="text-slate-300">•</span>
-                                                <p className="text-xs text-slate-500 font-medium">
-                                                    {new Date(ticket.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                </p>
+                                        
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors truncate pr-4">{ticket.title}</h3>
+                                            
+                                            <div className="flex flex-wrap items-center gap-2.5">
+                                                {/* Status Pill */}
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+                                                    ticket.status === 'OPEN' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                                    ticket.status === 'IN_PROGRESS' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                                    ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                                    ticket.status === 'REJECTED' ? 'bg-red-50 border-red-200 text-red-700' : 
+                                                    'bg-slate-50 border-slate-200 text-slate-600'
+                                                }`}>
+                                                    <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                                                        ticket.status === 'OPEN' ? 'bg-blue-500' :
+                                                        ticket.status === 'IN_PROGRESS' ? 'bg-amber-500 animate-pulse' :
+                                                        ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-500' :
+                                                        ticket.status === 'REJECTED' ? 'bg-red-500' : 
+                                                        'bg-slate-500'
+                                                    }`}></div>
+                                                    {ticket.status.replace('_', ' ')}
+                                                </span>
+                                                
+                                                {/* Resource Tag */}
+                                                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md">
+                                                    <Layers className="w-3 h-3 text-slate-400" />
+                                                    <span className="text-xs text-slate-600 font-semibold truncate max-w-[120px]">
+                                                        {ticket.resourceName || 'General Campus'} 
+                                                    </span>
+                                                </div>
+                                                
+                                                {/* Date Tag */}
+                                                <div className="flex items-center gap-1.5 text-slate-500 px-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span className="text-xs font-medium">
+                                                        {new Date(ticket.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                                                ticket.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
-                                                ticket.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
-                                                ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-100 text-emerald-700' :
-                                                ticket.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 
-                                                'bg-slate-100 text-slate-600'
-                                            }`}>
-                                                {ticket.status.replace('_', ' ')}
-                                            </span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    
+                                    <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full sm:w-auto pl-[4.5rem] sm:pl-0">
                                         {ticket.assignedTechnicianName && (
-                                            <div className="hidden md:flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                                                <span className="text-xs text-slate-500 font-medium">
-                                                    <span className="text-slate-900 font-bold">{ticket.assignedTechnicianName}</span>
-                                                </span>
+                                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 group-hover:bg-white group-hover:border-slate-300 transition-colors">
+                                                <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                                    {ticket.assignedTechnicianName.charAt(0)}
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-700">{ticket.assignedTechnicianName}</span>
                                             </div>
                                         )}
-                                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-600 transition-colors" />
+                                        <div className="flex w-10 h-10 rounded-full items-center justify-center bg-slate-50 border border-slate-200 group-hover:bg-blue-50 group-hover:border-blue-200 group-hover:text-blue-600 transition-all duration-300 ml-auto sm:ml-0">
+                                            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-transform" />
+                                        </div>
                                     </div>
                                 </li>
                             ))}
