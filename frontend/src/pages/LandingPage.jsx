@@ -20,6 +20,7 @@ export const LandingPage = () => {
         }
     }, [user, navigate]);
 
+    // Define core features for the landing page grid
     const features = [
         {
             icon: <Calendar className="w-8 h-8 text-blue-500" />,
