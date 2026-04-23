@@ -46,19 +46,19 @@ export const TicketsPage = () => {
     };
 
     return (
-        <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50 text-gray-800">
+        <div className="min-h-[calc(100vh-4rem)] bg-slate-50 text-slate-800 font-sans">
             <div className="p-8 w-full max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 tracking-tight drop-shadow-sm">
+                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                         {user.role === 'TECHNICIAN' ? 'Assigned Tickets' :
                             user.role === 'ADMIN' ? 'All Tickets' : 'My Tickets'}
                     </h1>
                     <button
                         onClick={handleCreateNew}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white/70 hover:bg-white border border-white text-purple-700 rounded-2xl backdrop-blur-xl transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-sm group"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 group"
                     >
-                        <Plus className="w-5 h-5 text-purple-500 group-hover:scale-110 transition-transform" />
-                        <span className="font-bold">Raise Issue</span>
+                        <Plus className="w-4 h-4" />
+                        <span className="font-bold text-sm">Raise Issue</span>
                     </button>
                 </div>
 
@@ -67,47 +67,46 @@ export const TicketsPage = () => {
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
                     </div>
                 ) : (
-                    <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 overflow-hidden">
-                        <ul className="divide-y divide-gray-100/50">
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <ul className="divide-y divide-slate-100">
                             {tickets.map(ticket => (
                                 <li
                                     key={ticket.id}
-                                    className="hover:bg-white/80 transition-all duration-300 cursor-pointer p-6 flex justify-between items-center group relative overflow-hidden"
+                                    className="hover:bg-slate-50 transition-all duration-200 cursor-pointer p-5 sm:p-6 flex justify-between items-center group relative"
                                     onClick={() => setSelectedTicket(ticket)}
                                 >
-                                    <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-blue-400 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className="flex items-start gap-5">
-                                        <div className="mt-1 p-2.5 rounded-2xl bg-white/60 shadow-sm border border-gray-100 group-hover:bg-white transition-colors">
+                                    <div className="flex items-start gap-4 sm:gap-5">
+                                        <div className="mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm transition-all">
                                             {getStatusIcon(ticket.status)}
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">{ticket.title}</h3>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <p className="text-sm text-gray-500 font-semibold bg-gray-100/50 px-2 py-0.5 rounded-lg border border-gray-200/50">
+                                            <h3 className="text-lg font-bold text-slate-900 mb-1.5 group-hover:text-blue-600 transition-colors">{ticket.title}</h3>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <p className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-1 rounded-md">
                                                     {ticket.resourceName || 'General Campus'} 
                                                 </p>
-                                                <span className="text-gray-300">•</span>
-                                                <p className="text-xs text-gray-400 font-medium tracking-wide">
-                                                    CREATED {new Date(ticket.createdAt).toLocaleDateString()}
+                                                <span className="text-slate-300">•</span>
+                                                <p className="text-xs text-slate-500 font-medium">
+                                                    {new Date(ticket.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                                                 </p>
                                             </div>
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${
-                                                ticket.status === 'OPEN' ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' :
-                                                ticket.status === 'IN_PROGRESS' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 shadow-sm' :
-                                                ticket.status === 'RESOLVED' ? 'bg-green-50 text-green-700 border-green-200 shadow-sm' :
-                                                ticket.status === 'CLOSED' ? 'bg-gray-100 text-gray-600 border-gray-200 shadow-sm' :
-                                                ticket.status === 'REJECTED' ? 'bg-red-50 text-red-600 border-red-200 shadow-sm' : 
-                                                'bg-gray-100 text-gray-600 border-gray-200 shadow-sm'
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                                ticket.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
+                                                ticket.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
+                                                ticket.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700' :
+                                                ticket.status === 'CLOSED' ? 'bg-slate-100 text-slate-600' :
+                                                ticket.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 
+                                                'bg-slate-100 text-slate-600'
                                             }`}>
-                                                {ticket.status}
+                                                {ticket.status.replace('_', ' ')}
                                             </span>
                                         </div>
                                     </div>
                                     {ticket.assignedTechnicianName && (
-                                        <div className="hidden md:flex items-center gap-2 bg-white/60 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
-                                            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse hidden md:block"></div>
-                                            <span className="text-sm text-gray-500 font-medium">
-                                                Assigned: <span className="text-purple-700 font-bold ml-1">{ticket.assignedTechnicianName}</span>
+                                        <div className="hidden md:flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                                            <span className="text-xs text-slate-500 font-medium">
+                                                <span className="text-slate-900 font-bold">{ticket.assignedTechnicianName}</span>
                                             </span>
                                         </div>
                                     )}
