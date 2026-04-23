@@ -34,7 +34,7 @@ const RoleSelectionPage = () => {
   const roles = [
     {
       id: 'USER',
-      name: 'Student / Staff',
+      name: 'User',
       description: 'Book facilities and raise maintenance tickets',
       icon: UserCircle,
       colorClass: {

@@ -38,7 +38,7 @@ public class SmartCampusBackendApplication {
 		String frontendUrl = dotenv.get("FRONTEND_URL", "http://localhost:5173");
 		springProps.put("app.frontend-url", frontendUrl);
 
-		String baseUrl = dotenv.get("BASE_URL", "http://localhost:8080");
+		String baseUrl = dotenv.get("BASE_URL", "http://localhost:8082");
 		springProps.put("app.base-url", baseUrl);
 
 		String jwtSecret = dotenv.get("JWT_SECRET", null);
@@ -50,6 +50,18 @@ public class SmartCampusBackendApplication {
 
 		String oauthSuccess = dotenv.get("OAUTH_SUCCESS_URL", null);
 		if (oauthSuccess != null) springProps.put("oauth.success-url", oauthSuccess);
+
+		String mailUsername = dotenv.get("MAIL_USERNAME", null);
+		if (mailUsername != null) {
+			springProps.put("spring.mail.username", mailUsername);
+			System.out.println("=== MAIL_USERNAME loaded: " + mailUsername + " ===");
+		}
+
+		String mailPassword = dotenv.get("MAIL_PASSWORD", null);
+		if (mailPassword != null) {
+			springProps.put("spring.mail.password", mailPassword);
+			System.out.println("=== MAIL_PASSWORD loaded (length: " + mailPassword.length() + ") ===");
+		}
 
 		new SpringApplicationBuilder(SmartCampusBackendApplication.class)
 				.properties(springProps)

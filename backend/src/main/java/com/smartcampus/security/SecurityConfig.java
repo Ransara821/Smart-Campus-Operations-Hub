@@ -75,10 +75,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/api/auth/me", "/api/auth/login", "/api/auth/signin", "/api/auth/signup",
-                                "/api/auth/logout")
-                        .permitAll()
+                        .requestMatchers(
+                                "/api/auth/me",
+                                "/api/auth/login",
+                                "/api/auth/signin",
+                                "/api/auth/signin/verify-otp",
+                                "/api/auth/signup",
+                                "/api/auth/signup/verify-otp",
+                                "/api/auth/resend-otp",
+                                "/api/auth/logout"
+                        ).permitAll()
                         .requestMatchers("/api/bookings/verify-qr", "/api/bookings/*/qr").permitAll()
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/api/**").authenticated()

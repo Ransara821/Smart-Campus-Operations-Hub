@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { ResourcesPage } from './pages/ResourcesPage';
@@ -8,9 +8,12 @@ import { QRVerificationPage } from './pages/QRVerificationPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import { LandingPage } from './pages/LandingPage';
+import { AboutUsPage } from './pages/AboutUsPage';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { UsersPage } from './pages/UsersPage';
 import {
   Bell, LayoutDashboard, CalendarDays, Ticket, Scan,
-  LogOut, Building2, GraduationCap, Wrench, ShieldCheck
+  LogOut, Building2, GraduationCap, Wrench, ShieldCheck, Users
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from './api/axios';
@@ -19,11 +22,13 @@ import './App.css';
 // ─── Page title resolver ────────────────────────────────────────────
 function usePageTitle(pathname) {
   const map = {
-    '/resources':     { title: 'Facilities & Assets', icon: Building2 },
-    '/bookings':      { title: 'My Bookings',          icon: CalendarDays },
+    '/dashboard':     { title: 'Admin Dashboard',      icon: LayoutDashboard },
+    '/resources':     { title: 'Facilities & Assets',  icon: Building2 },
+    '/bookings':      { title: 'Bookings',              icon: CalendarDays },
     '/tickets':       { title: 'Maintenance Tickets',  icon: Ticket },
     '/notifications': { title: 'Notifications',        icon: Bell },
     '/verify-qr':     { title: 'QR Verification',      icon: Scan },
+    '/users':         { title: 'User Management',      icon: Users },
   };
   return map[pathname] || { title: 'SmartCampus', icon: LayoutDashboard };
 }
@@ -31,11 +36,15 @@ function usePageTitle(pathname) {
 // ─── Sidebar ────────────────────────────────────────────────────────
 function Sidebar({ user, unreadCount, onLogout }) {
   const navItems = [
-    { to: '/resources',     label: 'Facilities',   icon: Building2     },
-    { to: '/bookings',      label: 'Bookings',     icon: CalendarDays  },
-    { to: '/tickets',       label: 'Tickets',      icon: Ticket        },
-    { to: '/notifications', label: 'Notifications',icon: Bell, badge: unreadCount },
-    ...(user?.role === 'ADMIN' ? [{ to: '/verify-qr', label: 'Verify QR', icon: Scan }] : []),
+    ...(user?.role === 'ADMIN' ? [{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: 'new' }] : []),
+    { to: '/resources',     label: 'Facilities',    icon: Building2    },
+    { to: '/bookings',      label: 'Bookings',      icon: CalendarDays },
+    { to: '/tickets',       label: 'Tickets',       icon: Ticket       },
+    { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+    ...(user?.role === 'ADMIN' ? [
+      { to: '/verify-qr', label: 'Verify QR', icon: Scan },
+      { to: '/users', label: 'Users', icon: Users }
+    ] : []),
   ];
 
   const initials = user?.name
@@ -71,7 +80,10 @@ function Sidebar({ user, unreadCount, onLogout }) {
           >
             <Icon className="sidebar-icon" />
             {label}
-            {badge > 0 && (
+            {badge === 'new' && (
+              <span className="dash-nav-badge">new</span>
+            )}
+            {typeof badge === 'number' && badge > 0 && (
               <span className="sidebar-badge">{badge > 9 ? '9+' : badge}</span>
             )}
           </NavLink>
@@ -154,7 +166,7 @@ function AppContent() {
     </div>
   );
 
-  const isPublicPage = ['/', '/login', '/select-role', '/verify-qr'].includes(location.pathname);
+  const isPublicPage = ['/', '/about-us', '/login', '/select-role', '/verify-qr'].includes(location.pathname);
   const showLayout = user && !isPublicPage;
 
   if (showLayout) {
@@ -164,12 +176,22 @@ function AppContent() {
         <TopHeader pathname={location.pathname} unreadCount={unreadCount} />
         <main className="app-main">
           <Routes>
+            {user?.role === 'ADMIN' && (
+              <Route path="/dashboard" element={<AdminDashboard />} />
+            )}
             <Route path="/resources"     element={<ResourcesPage />} />
             <Route path="/bookings"      element={<BookingsPage />} />
             <Route path="/tickets"       element={<TicketsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/verify-qr"     element={<QRVerificationPage />} />
-            <Route path="*"              element={<ResourcesPage />} />
+            {user?.role === 'ADMIN' && (
+              <Route path="/users" element={<UsersPage />} />
+            )}
+            <Route path="*" element={
+              user?.role === 'ADMIN'
+                ? <Navigate to="/dashboard" replace />
+                : <ResourcesPage />
+            } />
           </Routes>
         </main>
       </div>
@@ -179,6 +201,7 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/"            element={<LandingPage />} />
+      <Route path="/about-us"    element={<AboutUsPage />} />
       <Route path="/login"       element={<LoginPage />} />
       <Route path="/select-role" element={<RoleSelectionPage />} />
       <Route path="/verify-qr"   element={<QRVerificationPage />} />

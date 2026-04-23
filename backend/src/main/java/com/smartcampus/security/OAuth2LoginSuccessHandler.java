@@ -102,11 +102,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
       log.info("New user created: {}, role: {}", email, assignedRole);
     }
 
-    // New users → role selection page
-    // Existing users with role → go directly to dashboard (no flashing!)
+    // New users (Sign Up) → Redirect to login with success message (No auto-login)
+    // Existing users (Log In) → go directly to dashboard
     String redirectUrl;
     if (isNewUser) {
-      redirectUrl = frontendSelectRoleUrl + "?token=" + token + "&new=true";
+      redirectUrl = frontendBaseUrl + "/login?signup=success";
     } else {
       redirectUrl = frontendBaseUrl + "/resources?token=" + token;
     }

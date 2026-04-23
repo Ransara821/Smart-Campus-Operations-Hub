@@ -4,12 +4,14 @@ import com.smartcampus.model.Role;
 import com.smartcampus.model.User;
 import com.smartcampus.repository.UserRepository;
 import com.smartcampus.security.JwtUtil;
+import com.smartcampus.service.EmailService;
+import com.smartcampus.service.OtpStore;
+import com.smartcampus.service.PendingSignupStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -25,15 +27,24 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final OtpStore otpStore;
+    private final PendingSignupStore pendingSignupStore;
+    private final EmailService emailService;
     private final Set<String> adminEmails;
 
     public AuthController(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtUtil jwtUtil,
+            OtpStore otpStore,
+            PendingSignupStore pendingSignupStore,
+            EmailService emailService,
             @Value("${app.admin.emails:admin@smartcampus.edu}") String adminEmailsConfig) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.otpStore = otpStore;
+        this.pendingSignupStore = pendingSignupStore;
+        this.emailService = emailService;
         this.adminEmails = new HashSet<>();
         Arrays.stream(adminEmailsConfig.split(","))
                 .map(String::trim)
@@ -41,6 +52,8 @@ public class AuthController {
                 .map(String::toLowerCase)
                 .forEach(this.adminEmails::add);
     }
+
+    // ─── GET /api/auth/me ─────────────────────────────────────────────────────
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
@@ -66,6 +79,8 @@ public class AuthController {
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
 
+    // ─── SIGNUP STEP 1: validate + send OTP ──────────────────────────────────
+
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
         if (isBlank(request.email()) || isBlank(request.password()) || isBlank(request.name())) {
@@ -77,17 +92,64 @@ public class AuthController {
             return ResponseEntity.status(409).body(Map.of("message", "An account with this email already exists"));
         }
 
-        User newUser = User.builder()
-                .email(normalizedEmail)
-                .name(request.name().trim())
-                .role(resolveInitialRole(normalizedEmail, request.role()))
-                .passwordHash(passwordEncoder.encode(request.password()))
-                .build();
+        pendingSignupStore.save(
+                normalizedEmail,
+                request.name().trim(),
+                passwordEncoder.encode(request.password()),
+                resolveInitialRole(normalizedEmail, request.role()));
 
-        User saved = userRepository.save(newUser);
-        String token = jwtUtil.generateToken(saved);
-        return ResponseEntity.ok(AuthResponse.from(saved, token));
+        String otp = otpStore.generateOtp(normalizedEmail);
+        try {
+            emailService.sendOtpEmail(normalizedEmail, otp);
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the actual error
+            otpStore.clearOtp(normalizedEmail);
+            pendingSignupStore.clear(normalizedEmail);
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to send OTP email. Please try again."));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "OTP sent to " + normalizedEmail,
+                "email", normalizedEmail,
+                "step", "otp_required"
+        ));
     }
+
+    // ─── SIGNUP STEP 2: verify OTP → return JWT ───────────────────────────────
+
+    @PostMapping("/signup/verify-otp")
+    public ResponseEntity<?> verifySignupOtp(@RequestBody OtpVerifyRequest request) {
+        if (isBlank(request.email()) || isBlank(request.otp())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email and OTP are required"));
+        }
+
+        String normalizedEmail = normalizeEmail(request.email());
+        PendingSignupStore.PendingSignup pendingSignup = pendingSignupStore.get(normalizedEmail);
+        if (pendingSignup == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "Signup session expired. Please sign up again."));
+        }
+
+        if (!otpStore.validateOtp(normalizedEmail, request.otp())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid or expired OTP. Please try again."));
+        }
+
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            pendingSignupStore.clear(normalizedEmail);
+            return ResponseEntity.status(409).body(Map.of("message", "An account with this email already exists"));
+        }
+
+        User savedUser = userRepository.save(User.builder()
+                .email(pendingSignup.email())
+                .name(pendingSignup.name())
+                .role(pendingSignup.role())
+                .passwordHash(pendingSignup.passwordHash())
+                .build());
+        pendingSignupStore.clear(normalizedEmail);
+        String token = jwtUtil.generateToken(savedUser);
+        return ResponseEntity.ok(AuthResponse.from(savedUser, token));
+    }
+
+    // ─── SIGNIN STEP 1: validate credentials + send OTP ──────────────────────
 
     @PostMapping("/signin")
     public ResponseEntity<?> signin(@RequestBody SigninRequest request) {
@@ -106,7 +168,57 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("message", "Invalid email or password"));
         }
 
-        // Enforce admin access only to configured admin emails.
+        // Enforce admin access only to configured admin emails
+        if (user.getRole() == Role.ADMIN && !isAdminEmail(normalizedEmail)) {
+            user.setRole(Role.USER);
+            user = userRepository.save(user);
+        }
+
+        if (user.getRole() == Role.ADMIN && isAdminEmail(normalizedEmail)) {
+            otpStore.clearOtp(normalizedEmail);
+            String token = jwtUtil.generateToken(user);
+            return ResponseEntity.ok(AuthResponse.from(user, token));
+        }
+
+        // Generate and email OTP — recipient is request.email() (the user's own address)
+        String otp = otpStore.generateOtp(normalizedEmail);
+        try {
+            emailService.sendOtpEmail(normalizedEmail, otp);
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the actual error
+            otpStore.clearOtp(normalizedEmail);
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to send OTP email. Please try again."));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "OTP sent to " + normalizedEmail,
+                "email", normalizedEmail,
+                "step", "otp_required"
+        ));
+    }
+
+    // ─── SIGNIN STEP 2: verify OTP → return JWT ───────────────────────────────
+
+    @PostMapping("/signin/verify-otp")
+    public ResponseEntity<?> verifySigninOtp(@RequestBody OtpVerifyRequest request) {
+        if (isBlank(request.email()) || isBlank(request.otp())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email and OTP are required"));
+        }
+
+        String normalizedEmail = normalizeEmail(request.email());
+
+        if (!otpStore.validateOtp(normalizedEmail, request.otp())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid or expired OTP. Please try again."));
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(normalizedEmail);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+        }
+
+        User user = userOpt.get();
+
+        // Re-enforce admin role check on final step too
         if (user.getRole() == Role.ADMIN && !isAdminEmail(normalizedEmail)) {
             user.setRole(Role.USER);
             user = userRepository.save(user);
@@ -115,6 +227,45 @@ public class AuthController {
         String token = jwtUtil.generateToken(user);
         return ResponseEntity.ok(AuthResponse.from(user, token));
     }
+
+    // ─── RESEND OTP ───────────────────────────────────────────────────────────
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String mode = request.getOrDefault("mode", "signin"); // "signin" or "signup"
+
+        if (isBlank(email)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+        }
+
+        String normalizedEmail = normalizeEmail(email);
+        String normalizedMode = mode == null ? "signin" : mode.trim().toLowerCase();
+
+        if ("signin".equals(normalizedMode) && userRepository.findByEmail(normalizedEmail).isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found."));
+        }
+        if ("signup".equals(normalizedMode) && pendingSignupStore.get(normalizedEmail) == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "Signup session expired. Please sign up again."));
+        }
+
+        String otp = otpStore.generateOtp(normalizedEmail);
+        try {
+            emailService.sendOtpEmail(normalizedEmail, otp);
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the actual error
+            otpStore.clearOtp(normalizedEmail);
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to resend OTP. Please try again."));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "OTP resent to " + normalizedEmail,
+                "email", normalizedEmail,
+                "step", "otp_required"
+        ));
+    }
+
+    // ─── ROLE SELECTION ───────────────────────────────────────────────────────
 
     @PostMapping("/select-role")
     public ResponseEntity<?> selectRole(Authentication authentication,
@@ -156,13 +307,14 @@ public class AuthController {
             User user = userOpt.get();
             user.setRole(role);
             User saved = userRepository.save(user);
-            // Return fresh JWT so frontend can update its token with the new role
             String newToken = jwtUtil.generateToken(saved);
             return ResponseEntity.ok(Map.of("user", saved, "token", newToken));
         } else {
             return ResponseEntity.status(404).body(Map.of("message", "User not found"));
         }
     }
+
+    // ─── LOGOUT ───────────────────────────────────────────────────────────────
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(jakarta.servlet.http.HttpServletRequest request) {
@@ -173,6 +325,8 @@ public class AuthController {
             return ResponseEntity.ok().body(Map.of("message", "Logout completed"));
         }
     }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private Role resolveInitialRole(String email, String requestedRole) {
         if (isAdminEmail(email)) {
@@ -201,16 +355,17 @@ public class AuthController {
         return value == null || value.trim().isEmpty();
     }
 
-    public record SignupRequest(String name, String email, String password, String role) {
-    }
+    // ─── Request / Response Records ───────────────────────────────────────────
 
-    public record SigninRequest(String email, String password) {
-    }
+    public record SignupRequest(String name, String email, String password, String role) {}
+
+    public record SigninRequest(String email, String password) {}
+
+    public record OtpVerifyRequest(String email, String otp) {}
 
     public record AuthResponse(String token, User user) {
         static AuthResponse from(User user, String token) {
             return new AuthResponse(token, user);
         }
     }
-
 }
