@@ -107,67 +107,8 @@ export const LandingPage = () => {
         }
     }, [user, navigate]);
 
-    const scrollToSection = (sectionId) => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
-    const navItems = [
-        { label: 'Overview', target: 'overview', type: 'section' },
-        { label: 'About Us', path: '/about-us', type: 'route' },
-        { label: 'Campus Pulse', target: 'pulse', type: 'section' },
-        { label: 'Modules', target: 'modules', type: 'section' },
-        { label: 'Wayfinding', target: 'wayfinding', type: 'section' }
-    ];
-
-    const heroStats = [
-        { value: '200+', label: 'Resources' },
-        { value: '15k+', label: 'Active Users' },
-        { value: '99.9%', label: 'System Uptime' },
-        { value: '24/7', label: 'Operational Support' }
-    ];
-
-    const pulseCards = [
-        {
-            icon: Building2,
-            title: 'Library Capacity',
-            value: '78%',
-            accent: '#a78bfa',
-            detail: 'Real-time occupancy across high-demand facilities.',
-            progress: 78,
-            footer: 'Moderate campus traffic'
-        },
-        {
-            icon: CalendarDays,
-            title: 'Parking Availability',
-            value: '142',
-            suffix: 'spots open',
-            accent: '#c084fc',
-            detail: 'Bookings and access flow aligned for peak campus hours.',
-            badges: ['North Block: 89', 'South Lot: 53'],
-            footer: 'Synced with booking demand'
-        },
-        {
-            icon: Ticket,
-            title: 'Maintenance Queue',
-            value: '4',
-            suffix: 'open tickets',
-            accent: '#f0abfc',
-            detail: 'Technicians receive issues instantly with status tracking.',
-            badges: ['2 in progress', '2 awaiting review'],
-            footer: 'Average response 12 mins'
-        },
-        {
-            icon: ScanLine,
-            title: 'QR Access',
-            value: '99.9%',
-            accent: '#8b5cf6',
-            detail: 'Secure entry validation for rooms, labs, and equipment pickup.',
-            progress: 100,
-            footer: 'Protected by role-based access'
-        }
-    ];
-
-    const modules = [
+    // Define core features for the landing page grid
+    const features = [
         {
             icon: CalendarDays,
             title: 'Smart Reservations',
@@ -194,7 +135,8 @@ export const LandingPage = () => {
         }
     ];
 
-    const quickFlow = [
+    // Define the step-by-sequence for the How It Works section
+    const howItWorks = [
         {
             step: '01',
             title: 'Discover resources',
