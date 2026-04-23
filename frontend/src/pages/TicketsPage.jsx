@@ -120,45 +120,54 @@ export const TicketsPage = () => {
                             {filteredTickets.map(ticket => (
                                 <li
                                     key={ticket.id}
-                                    className="hover:bg-slate-50 transition-all duration-200 cursor-pointer p-5 sm:p-6 flex justify-between items-center group relative"
+                                    className="hover:bg-slate-50/80 transition-colors duration-150 cursor-pointer px-5 py-4 flex items-center justify-between group relative border-l-2 border-transparent hover:border-slate-300"
                                     onClick={() => setSelectedTicket(ticket)}
                                 >
-                                    <div className="flex items-start gap-4 sm:gap-5 flex-1">
-                                        <div className="mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm transition-all">
+                                    {/* Left Side: Icon & Info */}
+                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-sm transition-all">
                                             {getStatusIcon(ticket.status)}
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-slate-900 mb-1.5 group-hover:text-blue-600 transition-colors">{ticket.title}</h3>
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <p className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-1 rounded-md">
+                                        <div className="flex flex-col min-w-0">
+                                            <h3 className="text-[15px] font-semibold text-slate-900 truncate mb-0.5 group-hover:text-slate-700 transition-colors">
+                                                {ticket.title}
+                                            </h3>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[13px] text-slate-500 font-medium truncate max-w-[160px]">
                                                     {ticket.resourceName || 'General Campus'} 
-                                                </p>
+                                                </span>
                                                 <span className="text-slate-300">•</span>
-                                                <p className="text-xs text-slate-500 font-medium">
-                                                    {new Date(ticket.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                </p>
+                                                <span className="text-xs text-slate-400 font-medium">
+                                                    {new Date(ticket.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
                                             </div>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                                                ticket.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
-                                                ticket.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
-                                                ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-100 text-emerald-700' :
-                                                ticket.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 
-                                                'bg-slate-100 text-slate-600'
-                                            }`}>
-                                                {ticket.status.replace('_', ' ')}
-                                            </span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    
+                                    {/* Right Side: Status, Assignee, Chevron */}
+                                    <div className="flex items-center gap-6 flex-shrink-0 ml-4">
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                            ticket.status === 'OPEN' ? 'bg-blue-50 text-blue-600 border border-blue-100/50' :
+                                            ticket.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600 border border-amber-100/50' :
+                                            ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/50' :
+                                            ticket.status === 'REJECTED' ? 'bg-red-50 text-red-600 border border-red-100/50' : 
+                                            'bg-slate-50 text-slate-600 border border-slate-100/50'
+                                        }`}>
+                                            {ticket.status.replace('_', ' ')}
+                                        </span>
+
                                         {ticket.assignedTechnicianName && (
-                                            <div className="hidden md:flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                                                <span className="text-xs text-slate-500 font-medium">
-                                                    <span className="text-slate-900 font-bold">{ticket.assignedTechnicianName}</span>
+                                            <div className="hidden md:flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                                    {ticket.assignedTechnicianName.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className="text-[13px] text-slate-600 font-medium max-w-[120px] truncate">
+                                                    {ticket.assignedTechnicianName}
                                                 </span>
                                             </div>
                                         )}
-                                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-600 transition-colors" />
+                                        
+                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
                                     </div>
                                 </li>
                             ))}
