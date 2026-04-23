@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { TicketDetailsModal } from '../components/TicketDetailsModal';
-import { Plus, Wrench, AlertCircle, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
+import { Plus, Wrench, AlertCircle, CheckCircle2, XCircle, ChevronRight, Layers, Clock } from 'lucide-react';
 
 export const TicketsPage = () => {
     const { user } = useAuth();
@@ -79,18 +79,35 @@ export const TicketsPage = () => {
                 </div>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                     {[
-                        { label: 'Total Tickets', count: stats.total, color: 'text-slate-900' },
-                        { label: 'Open', count: stats.open, color: 'text-blue-600' },
-                        { label: 'In Progress', count: stats.inProgress, color: 'text-amber-600' },
-                        { label: 'Closed', count: stats.closed, color: 'text-emerald-600' }
-                    ].map((stat, idx) => (
-                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                            <span className="text-sm font-semibold text-slate-500">{stat.label}</span>
-                            <span className={`text-3xl font-bold mt-2 ${stat.color}`}>{stat.count}</span>
-                        </div>
-                    ))}
+                        { label: 'Total Tickets', count: stats.total, icon: Layers, color: 'text-slate-600', bg: 'bg-slate-100', border: 'border-slate-200' },
+                        { label: 'Open', count: stats.open, icon: AlertCircle, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100/50' },
+                        { label: 'In Progress', count: stats.inProgress, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100/50' },
+                        { label: 'Closed', count: stats.closed, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100/50' }
+                    ].map((stat, idx) => {
+                        const Icon = stat.icon;
+                        return (
+                            <div key={idx} className={`bg-white border rounded-2xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group ${stat.border}`}>
+                                {/* Watermark Background Icon */}
+                                <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.06] transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-all duration-500 pointer-events-none">
+                                    <Icon className={`w-28 h-28 ${stat.color}`} />
+                                </div>
+                                
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.color} ring-1 ring-inset ring-black/5`}>
+                                            <Icon className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">{stat.label}</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-4xl font-extrabold text-slate-900 tracking-tight">{stat.count}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Filters */}
@@ -120,54 +137,45 @@ export const TicketsPage = () => {
                             {filteredTickets.map(ticket => (
                                 <li
                                     key={ticket.id}
-                                    className="hover:bg-slate-50/80 transition-colors duration-150 cursor-pointer px-5 py-4 flex items-center justify-between group relative border-l-2 border-transparent hover:border-slate-300"
+                                    className="hover:bg-slate-50 transition-all duration-200 cursor-pointer p-5 sm:p-6 flex justify-between items-center group relative"
                                     onClick={() => setSelectedTicket(ticket)}
                                 >
-                                    {/* Left Side: Icon & Info */}
-                                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                                        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-sm transition-all">
+                                    <div className="flex items-start gap-4 sm:gap-5 flex-1">
+                                        <div className="mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm transition-all">
                                             {getStatusIcon(ticket.status)}
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <h3 className="text-[15px] font-semibold text-slate-900 truncate mb-0.5 group-hover:text-slate-700 transition-colors">
-                                                {ticket.title}
-                                            </h3>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[13px] text-slate-500 font-medium truncate max-w-[160px]">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-900 mb-1.5 group-hover:text-blue-600 transition-colors">{ticket.title}</h3>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <p className="text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-1 rounded-md">
                                                     {ticket.resourceName || 'General Campus'} 
-                                                </span>
+                                                </p>
                                                 <span className="text-slate-300">•</span>
-                                                <span className="text-xs text-slate-400 font-medium">
-                                                    {new Date(ticket.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                </span>
+                                                <p className="text-xs text-slate-500 font-medium">
+                                                    {new Date(ticket.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                </p>
                                             </div>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                                ticket.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
+                                                ticket.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
+                                                ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-100 text-emerald-700' :
+                                                ticket.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 
+                                                'bg-slate-100 text-slate-600'
+                                            }`}>
+                                                {ticket.status.replace('_', ' ')}
+                                            </span>
                                         </div>
                                     </div>
-                                    
-                                    {/* Right Side: Status, Assignee, Chevron */}
-                                    <div className="flex items-center gap-6 flex-shrink-0 ml-4">
-                                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                                            ticket.status === 'OPEN' ? 'bg-blue-50 text-blue-600 border border-blue-100/50' :
-                                            ticket.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600 border border-amber-100/50' :
-                                            ['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/50' :
-                                            ticket.status === 'REJECTED' ? 'bg-red-50 text-red-600 border border-red-100/50' : 
-                                            'bg-slate-50 text-slate-600 border border-slate-100/50'
-                                        }`}>
-                                            {ticket.status.replace('_', ' ')}
-                                        </span>
-
+                                    <div className="flex items-center gap-4">
                                         {ticket.assignedTechnicianName && (
-                                            <div className="hidden md:flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                                                    {ticket.assignedTechnicianName.charAt(0).toUpperCase()}
-                                                </div>
-                                                <span className="text-[13px] text-slate-600 font-medium max-w-[120px] truncate">
-                                                    {ticket.assignedTechnicianName}
+                                            <div className="hidden md:flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                                                <span className="text-xs text-slate-500 font-medium">
+                                                    <span className="text-slate-900 font-bold">{ticket.assignedTechnicianName}</span>
                                                 </span>
                                             </div>
                                         )}
-                                        
-                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-600 transition-colors" />
                                     </div>
                                 </li>
                             ))}
