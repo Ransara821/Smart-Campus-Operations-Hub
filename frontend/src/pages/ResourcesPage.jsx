@@ -62,47 +62,63 @@ export const ResourcesPage = () => {
     };
 
     return (
-        <div className="p-8 w-full max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Facilities & Assets</h1>
-                {user?.role === 'ADMIN' && (
-                    <button
-                        onClick={handleCreate}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Add Resource
-                    </button>
-                )}
-            </div>
-
-            <div className="relative mb-8 max-w-md">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="text-gray-400 w-5 h-5" />
-                </div>
-                <input
-                    type="text"
-                    placeholder="Search resources..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                {resources.map(resource => (
-                    <ResourceCard 
-                        key={resource.id} 
-                        resource={resource} 
-                        onEdit={() => handleEdit(resource)}
-                        onDelete={() => handleDelete(resource.id)}
-                    />
-                ))}
-                {resources.length === 0 && (
-                    <div className="col-span-fulltext-center text-gray-500 py-10">
-                        No resources found. Try adding some!
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 md:p-8 w-full">
+            <div className="max-w-7xl mx-auto">
+                {/* Header Section */}
+                <div className="mb-10">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                                Facilities & Assets
+                            </h1>
+                            <p className="text-gray-600 text-lg">Manage and explore your campus resources</p>
+                        </div>
+                        {user?.role === 'ADMIN' && (
+                            <button
+                                onClick={handleCreate}
+                                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 font-semibold transform hover:scale-105 active:scale-95"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Add Resource
+                            </button>
+                        )}
                     </div>
-                )}
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative mb-10 max-w-lg">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Search className="text-blue-400 w-5 h-5" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search resources by name or location..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-12 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400 shadow-sm hover:shadow-md"
+                    />
+                </div>
+
+                {/* Resources Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+                    {resources.map(resource => (
+                        <ResourceCard 
+                            key={resource.id} 
+                            resource={resource} 
+                            onEdit={() => handleEdit(resource)}
+                            onDelete={() => handleDelete(resource.id)}
+                        />
+                    ))}
+                    {resources.length === 0 && (
+                        <div className="col-span-full flex flex-col items-center justify-center py-16">
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-4">
+                                <Search className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <p className="text-gray-600 text-lg font-medium">No resources found</p>
+                            <p className="text-gray-500 text-sm mt-1">Try adjusting your search or add new resources</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {isFormOpen && (
