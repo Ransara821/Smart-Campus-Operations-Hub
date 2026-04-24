@@ -15,7 +15,6 @@ export const LoginPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
-    // Determine if the current mode is signup
     const isSignup = mode === 'signup';
     const roleOptions = useMemo(() => ([
         { value: 'USER', label: 'User', icon: UserPlus, description: 'Book facilities and raise tickets' },
