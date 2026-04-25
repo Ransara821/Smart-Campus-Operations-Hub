@@ -20,8 +20,61 @@ export const LandingPage = () => {
         }
     }, [user, navigate]);
 
+    const scrollToSection = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const heroStats = [
+        { value: '2,400+', label: 'Campus Users' },
+        { value: '98%', label: 'Uptime' },
+        { value: '4 Modules', label: 'Fully Integrated' },
+        { value: '< 2 min', label: 'Avg Response Time' }
+    ];
+
+    const pulseCards = [
+        {
+            icon: CalendarDays,
+            title: 'Active Bookings',
+            value: '142',
+            suffix: 'today',
+            accent: '#a78bfa',
+            detail: 'Rooms, labs, and equipment reserved',
+            progress: 72,
+            footer: 'Updated just now'
+        },
+        {
+            icon: Ticket,
+            title: 'Open Tickets',
+            value: '28',
+            accent: '#c084fc',
+            detail: 'Maintenance issues in progress',
+            badges: ['Plumbing', 'Electrical', 'HVAC'],
+            footer: 'Technicians assigned'
+        },
+        {
+            icon: Users,
+            title: 'Active Users',
+            value: '1,840',
+            accent: '#8b5cf6',
+            detail: 'Students and staff on platform',
+            progress: 85,
+            footer: 'Across all roles'
+        },
+        {
+            icon: ScanLine,
+            title: 'QR Verifications',
+            value: '96%',
+            suffix: 'success',
+            accent: '#d946ef',
+            detail: 'Access validations today',
+            progress: 96,
+            footer: 'Secure and real-time'
+        }
+    ];
+
     // Define core features for the landing page grid
-    const features = [
+    const modules = [
         {
             icon: <Calendar className="w-8 h-8 text-blue-500" />,
             title: "Smart Reservations",
@@ -39,7 +92,8 @@ export const LandingPage = () => {
         }
     ];
 
-    const howItWorks = [
+    // Define the step-by-sequence for the How It Works section
+    const quickFlow = [
         {
             step: "01",
             icon: <Search className="w-6 h-6" />,
@@ -60,20 +114,30 @@ export const LandingPage = () => {
         }
     ];
 
-    return (
-        <div className="landing-container">
-            {/* Custom Premium Navbar */}
-            <nav className="landing-nav">
-                <div className="nav-content">
-                    <div className="logo-section">
-                        <div className="logo-icon">SC</div>
-                        <span className="logo-text">SmartCampus</span>
-                    </div>
-                    <div className="nav-links">
-                        <Link to="/resources" className="nav-link">Facilities</Link>
-                        <Link to="/tickets" className="nav-link">Support</Link>
-                        <button onClick={() => navigate('/login')} className="nav-btn-primary">
-                            Sign In <Lock className="w-4 h-4" />
+    const navItems = [
+        { label: 'Overview', target: 'overview', type: 'section' },
+        { label: 'About Us', path: '/about-us', type: 'route' },
+        { label: 'Campus Pulse', target: 'pulse', type: 'section' },
+        { label: 'Modules', target: 'modules', type: 'section' },
+        { label: 'Wayfinding', target: 'wayfinding', type: 'section' }
+    ];
+
+      return (
+        <div className="min-h-screen bg-[#fcf8ff] text-slate-900">
+            <div className="relative overflow-hidden bg-[linear-gradient(180deg,#fdfaff_0%,#f6efff_36%,#f9f5ff_100%)]">
+                <div className="absolute inset-0 opacity-100" style={{ background: 'radial-gradient(circle at top left, rgba(216,180,254,0.35), transparent 28%), radial-gradient(circle at top right, rgba(196,181,253,0.3), transparent 34%), radial-gradient(circle at 50% 70%, rgba(244,208,255,0.4), transparent 30%)' }} />
+                <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.14) 1px, transparent 1px)', backgroundSize: '36px 36px' }} />
+
+                <nav className="sticky top-0 z-30 border-b border-violet-100 bg-white/75 backdrop-blur-xl">
+                    <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+                        <button type="button" onClick={() => scrollToSection('overview')} className="flex items-center gap-3 text-left">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-300 via-fuchsia-300 to-purple-400 shadow-[0_12px_30px_rgba(168,85,247,0.22)]">
+                                <GraduationCap className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                                <div className="text-sm font-black uppercase tracking-[0.25em] text-slate-900">SmartCampus</div>
+                                <div className="text-xs font-medium text-violet-500">Operations Hub</div>
+                            </div>
                         </button>
                     </div>
                 </div>
