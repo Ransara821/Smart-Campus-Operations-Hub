@@ -1,248 +1,547 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-    ArrowRight, Box, Calendar, Clock, Lock, ShieldCheck, Zap, 
-    Search, CheckCircle, Users, Mail, Phone, MapPin, 
-    Facebook, Twitter, Linkedin, Github, LayoutGrid, ClipboardCheck, MessageSquare
+import {
+    ArrowRight,
+    Building2,
+    CalendarDays,
+    CheckCircle2,
+    ChevronRight,
+    Compass,
+    GraduationCap,
+    LayoutGrid,
+    LocateFixed,
+    Mail,
+    Map,
+    MapPin,
+    Phone,
+    ScanLine,
+    ShieldCheck,
+    Ticket,
+    Users,
+    Wrench,
+    Zap
 } from 'lucide-react';
 import './LandingPage.css';
 import heroBg from '../assets/hero-bg.png';
+
+function PulseCard({ icon: Icon, title, value, suffix, accent, detail, badges, progress, footer }) {
+    return (
+        <div
+            className="rounded-[28px] border bg-white/85 p-6 shadow-[0_20px_60px_rgba(168,85,247,0.12)] backdrop-blur-xl"
+            style={{ borderColor: `${accent}22`, boxShadow: `0 20px 60px ${accent}14` }}
+        >
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <p className="text-sm font-semibold text-slate-600">{title}</p>
+                    <div className="mt-4 flex items-end gap-2">
+                        <span className="text-4xl font-black tracking-tight text-slate-900">{value}</span>
+                        {suffix && <span className="pb-1 text-sm font-semibold text-slate-500">{suffix}</span>}
+                    </div>
+                    <p className="mt-2 text-sm text-slate-500">{detail}</p>
+                </div>
+                <div
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl border"
+                    style={{ backgroundColor: `${accent}18`, borderColor: `${accent}30`, color: accent }}
+                >
+                    <Icon className="h-5 w-5" />
+                </div>
+            </div>
+
+            {typeof progress === 'number' && (
+                <div className="mt-6">
+                    <div className="h-2.5 overflow-hidden rounded-full bg-violet-100">
+                        <div
+                            className="h-full rounded-full"
+                            style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${accent}, #ddd6fe)` }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {badges?.length > 0 && (
+                <div className="mt-6 flex flex-wrap gap-2">
+                    {badges.map((badge) => (
+                        <span key={badge} className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-medium text-slate-600">
+                            {badge}
+                        </span>
+                    ))}
+                </div>
+            )}
+
+            <div className="mt-5 flex items-center justify-between text-xs text-slate-500">
+                <span>{footer}</span>
+                <span className="inline-flex items-center gap-1 font-medium text-violet-500">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Live
+                </span>
+            </div>
+        </div>
+    );
+}
+
+function FeatureCard({ icon: Icon, title, description, accent }) {
+    return (
+        <div
+            className="group rounded-[28px] border bg-white/80 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white"
+            style={{ borderColor: `${accent}24`, boxShadow: `0 18px 50px ${accent}10` }}
+        >
+            <div
+                className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border transition-transform duration-300 group-hover:scale-105"
+                style={{ backgroundColor: `${accent}18`, borderColor: `${accent}30`, color: accent }}
+            >
+                <Icon className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">{title}</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-500">{description}</p>
+        </div>
+    );
+}
 
 export const LandingPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    // Redirect logged-in users away from the landing page
     useEffect(() => {
         if (user) {
-            navigate('/resources');
+            navigate(user.role === 'ADMIN' ? '/dashboard' : '/resources');
         }
     }, [user, navigate]);
 
-    const features = [
+    const scrollToSection = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const heroStats = [
+        { value: '2,400+', label: 'Campus Users' },
+        { value: '98%', label: 'Uptime' },
+        { value: '4 Modules', label: 'Fully Integrated' },
+        { value: '< 2 min', label: 'Avg Response Time' }
+    ];
+
+    const pulseCards = [
         {
-            icon: <Calendar className="w-8 h-8 text-blue-500" />,
-            title: "Smart Reservations",
-            description: "Instant booking for lecture halls, laboratories, and study spaces with real-time status."
+            icon: CalendarDays,
+            title: 'Active Bookings',
+            value: '142',
+            suffix: 'today',
+            accent: '#a78bfa',
+            detail: 'Rooms, labs, and equipment reserved',
+            progress: 72,
+            footer: 'Updated just now'
         },
         {
-            icon: <Zap className="w-8 h-8 text-amber-500" />,
-            title: "Rapid Maintenance",
-            description: "Found an issue? Raise a ticket in seconds. Our technicians are notified instantly."
+            icon: Ticket,
+            title: 'Open Tickets',
+            value: '28',
+            accent: '#c084fc',
+            detail: 'Maintenance issues in progress',
+            badges: ['Plumbing', 'Electrical', 'HVAC'],
+            footer: 'Technicians assigned'
         },
         {
-            icon: <ShieldCheck className="w-8 h-8 text-emerald-500" />,
-            title: "Secure Operations",
-            description: "Encrypted QR-based access verification and role-based permissions for total security."
+            icon: Users,
+            title: 'Active Users',
+            value: '1,840',
+            accent: '#8b5cf6',
+            detail: 'Students and staff on platform',
+            progress: 85,
+            footer: 'Across all roles'
+        },
+        {
+            icon: ScanLine,
+            title: 'QR Verifications',
+            value: '96%',
+            suffix: 'success',
+            accent: '#d946ef',
+            detail: 'Access validations today',
+            progress: 96,
+            footer: 'Secure and real-time'
         }
     ];
 
-    const howItWorks = [
+    // Define core features for the landing page grid
+    const modules = [
         {
-            step: "01",
-            icon: <Search className="w-6 h-6" />,
-            title: "Find Resources",
-            description: "Browse available classrooms, labs, or equipment across the entire campus in real-time."
+            icon: CalendarDays,
+            title: 'Smart Reservations',
+            description: 'Book lecture halls, labs, and equipment with live availability, conflict prevention, and instant confirmations.',
+            accent: '#a78bfa'
         },
         {
-            step: "02",
-            icon: <ClipboardCheck className="w-6 h-6" />,
-            title: "Book Instantly",
-            description: "Select your time slot and reserve your space with a single click. No paperwork needed."
+            icon: Wrench,
+            title: 'Maintenance Workflow',
+            description: 'Raise support tickets fast, assign technicians, and keep every issue moving with visible status updates.',
+            accent: '#c084fc'
         },
         {
-            step: "03",
-            icon: <CheckCircle className="w-6 h-6" />,
-            title: "Manage & Access",
-            description: "Track your bookings and use your digital QR code for quick, secure entry verification."
+            icon: ShieldCheck,
+            title: 'Secure Authentication',
+            description: 'Protect users with OTP verification, role-based access, and admin control for critical campus operations.',
+            accent: '#8b5cf6'
+        },
+        {
+            icon: LayoutGrid,
+            title: 'Unified Oversight',
+            description: 'Give admins a single command center for facilities, bookings, tickets, users, notifications, and QR checks.',
+            accent: '#d946ef'
         }
     ];
 
-    return (
-        <div className="landing-container">
-            {/* Custom Premium Navbar */}
-            <nav className="landing-nav">
-                <div className="nav-content">
-                    <div className="logo-section">
-                        <div className="logo-icon">SC</div>
-                        <span className="logo-text">SmartCampus</span>
-                    </div>
-                    <div className="nav-links">
-                        <Link to="/resources" className="nav-link">Facilities</Link>
-                        <Link to="/tickets" className="nav-link">Support</Link>
-                        <button onClick={() => navigate('/login')} className="nav-btn-primary">
-                            Sign In <Lock className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            </nav>
+    // Define the step-by-sequence for the How It Works section
+    const quickFlow = [
+        {
+            step: '01',
+            title: 'Discover resources',
+            description: 'Students and staff find rooms, labs, and equipment with real-time visibility.'
+        },
+        {
+            step: '02',
+            title: 'Reserve and manage',
+            description: 'Bookings, approvals, and notifications stay in one streamlined workflow.'
+        },
+        {
+            step: '03',
+            title: 'Operate securely',
+            description: 'QR verification, role controls, and ticket tracking keep the campus running smoothly.'
+        }
+    ];
 
-            {/* Hero Section */}
-            <section className="hero-section" style={{ backgroundImage: `url(${heroBg})` }}>
-                <div className="hero-overlay"></div>
-                <div className="hero-content">
-                    <div className="badge animate-fade-in">Next Generation Campus Management</div>
-                    <h1 className="hero-title animate-slide-up">
-                        Elevate Your Campus <br />
-                        <span className="text-gradient">Experience</span>
-                    </h1>
-                    <p className="hero-subtitle animate-slide-up-delay">
-                        The all-in-one hub for facility management, resource booking, and maintenance tracking. 
-                        Streamlining campus operations with smart technology.
-                    </p>
-                    <div className="hero-actions animate-slide-up-delay-2">
-                        <button onClick={() => navigate('/login')} className="btn-main">
-                            Get Started Free
-                        </button>
-                        <button onClick={() => document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' })} className="btn-outline">
-                            How it Works
-                        </button>
-                    </div>
-                </div>
-                
-                <div className="hero-stats">
-                    <div className="stat-item">
-                        <span className="stat-value">200+</span>
-                        <span className="stat-label">Resources</span>
-                    </div>
-                    <div className="stat-divider"></div>
-                    <div className="stat-item">
-                        <span className="stat-value">15k+</span>
-                        <span className="stat-label">Users</span>
-                    </div>
-                    <div className="stat-divider"></div>
-                    <div className="stat-item">
-                        <span className="stat-value">99.9%</span>
-                        <span className="stat-label">Uptime</span>
-                    </div>
-                </div>
-            </section>
+    const navItems = [
+        { label: 'Overview', target: 'overview', type: 'section' },
+        { label: 'About Us', path: '/about-us', type: 'route' },
+        { label: 'Campus Pulse', target: 'pulse', type: 'section' },
+        { label: 'Modules', target: 'modules', type: 'section' },
+        { label: 'Wayfinding', target: 'wayfinding', type: 'section' }
+    ];
 
-            {/* How It Works Section */}
-            <section id="how-it-works" className="how-it-works">
-                <div className="section-header">
-                    <h1 className="section-tag">Process</h1>
-                    <h2 className="section-title">How SmartCampus Works</h2>
-                    <p className="section-subtitle">A seamless experience designed for modern education environments.</p>
-                </div>
-                
-                <div className="steps-container">
-                    {howItWorks.map((item, index) => (
-                        <div key={index} className="step-card">
-                            <div className="step-number">{item.step}</div>
-                            <div className="step-icon-box">{item.icon}</div>
-                            <h3 className="step-title">{item.title}</h3>
-                            <p className="step-description">{item.description}</p>
+      return (
+        <div className="min-h-screen bg-[#fcf8ff] text-slate-900">
+            <div className="relative overflow-hidden bg-[linear-gradient(180deg,#fdfaff_0%,#f6efff_36%,#f9f5ff_100%)]">
+                <div className="absolute inset-0 opacity-100" style={{ background: 'radial-gradient(circle at top left, rgba(216,180,254,0.35), transparent 28%), radial-gradient(circle at top right, rgba(196,181,253,0.3), transparent 34%), radial-gradient(circle at 50% 70%, rgba(244,208,255,0.4), transparent 30%)' }} />
+                <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.14) 1px, transparent 1px)', backgroundSize: '36px 36px' }} />
+
+                <nav className="sticky top-0 z-30 border-b border-violet-100 bg-white/75 backdrop-blur-xl">
+                    <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+                        <button type="button" onClick={() => scrollToSection('overview')} className="flex items-center gap-3 text-left">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-300 via-fuchsia-300 to-purple-400 shadow-[0_12px_30px_rgba(168,85,247,0.22)]">
+                                <GraduationCap className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                                <div className="text-sm font-black uppercase tracking-[0.25em] text-slate-900">SmartCampus</div>
+                                <div className="text-xs font-medium text-violet-500">Operations Hub</div>
+                            </div>
+                        </button>
+
+                        <div className="hidden items-center gap-2 rounded-full border border-violet-100 bg-white/75 px-2 py-1 shadow-[0_10px_30px_rgba(139,92,246,0.08)] lg:flex">
+                            {navItems.map((item, index) => (
+                                <button
+                                    key={item.label}
+                                    type="button"
+                                    onClick={() => item.type === 'route' ? navigate(item.path) : scrollToSection(item.target)}
+                                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${index === 0 ? 'bg-violet-500 text-white shadow-sm' : 'text-slate-600 hover:bg-violet-50 hover:text-violet-600'}`}
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
                         </div>
-                    ))}
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/login')}
+                                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-400 px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_35px_rgba(168,85,247,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(168,85,247,0.3)]"
+                            >
+                                Get Started
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+
+                <section id="overview" className="relative">
+                    <div className="absolute inset-0 opacity-12" style={{ backgroundImage: `linear-gradient(90deg, rgba(255,250,255,0.96) 0%, rgba(249,245,255,0.78) 38%, rgba(244,237,255,0.72) 100%), url(${heroBg})`, backgroundPosition: 'center', backgroundSize: 'cover' }} />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(248,242,255,0.68)_68%,#fcf8ff_100%)]" />
+
+                    <div className="relative mx-auto max-w-7xl px-6 pb-20 pt-6 lg:px-8 lg:pb-28 lg:pt-8">
+                        <div className="grid gap-12">
+                            <div className="max-w-5xl pt-0">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-100/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-violet-700">
+                                    <Zap className="h-3.5 w-3.5" />
+                                    Intelligent campus operations
+                                </div>
+
+                                <h1 className="mt-8 max-w-5xl text-5xl font-black leading-[1.05] tracking-[-0.04em] text-slate-900 sm:text-6xl lg:text-7xl">
+                                    Power a smarter campus with seamless bookings, maintenance, and secure access.
+                                </h1>
+
+                                <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
+                                    Manage spaces, support requests, user roles, and QR verification from one connected platform designed for faster daily campus operations.
+                                </p>
+
+                                <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('/login')}
+                                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-400 px-6 py-4 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(168,85,247,0.2)] transition hover:-translate-y-0.5"
+                                    >
+                                        Get Started Free
+                                        <ArrowRight className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollToSection('modules')}
+                                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white/75 px-6 py-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
+                                    >
+                                        Explore Platform
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+
+                                <div className="mt-14 grid gap-4 border-t border-violet-100 pt-8 sm:grid-cols-2 xl:grid-cols-4">
+                                    {heroStats.map((stat) => (
+                                        <div key={stat.label} className="rounded-2xl border border-violet-100 bg-white/75 px-5 py-4 shadow-[0_16px_40px_rgba(139,92,246,0.08)] backdrop-blur-sm">
+                                            <div className="text-3xl font-black tracking-tight text-slate-900">{stat.value}</div>
+                                            <div className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-violet-500">{stat.label}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section id="pulse" className="border-t border-violet-100 bg-[#fbf7ff]">
+                <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+                    <div className="max-w-2xl">
+                        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-500">Campus Pulse</p>
+                        <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">Operational insight across the university.</h2>
+                        <p className="mt-5 text-lg leading-8 text-slate-500">
+                            Surface the live data that matters most, from resource demand and parking flow to maintenance load and secure access.
+                        </p>
+                    </div>
+
+                    <div className="mt-12 grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+                        {pulseCards.map((card) => (
+                            <PulseCard key={card.title} {...card} />
+                        ))}
+                    </div>
                 </div>
             </section>
 
-            {/* Features Section */}
-            <section id="features" className="features-section">
-                <div className="features-layout">
-                    <div className="features-text">
-                        <h1 className="section-tag">Key Features</h1>
-                        <h2 className="section-title">Everything you need <br/>in one powerful hub</h2>
-                        <p className="section-subtitle">We build the tools, you focus on education. Our platform handles the complexity of campus logistics.</p>
-                        
-                        <ul className="features-checklist">
-                            <li><CheckCircle className="w-5 h-5 text-emerald-500" /> Automated conflict resolution</li>
-                            <li><CheckCircle className="w-5 h-5 text-emerald-500" /> Integrated maintenance workflow</li>
-                            <li><CheckCircle className="w-5 h-5 text-emerald-500" /> Detailed analytics & reporting</li>
-                        </ul>
-                    </div>
-                    
-                    <div className="features-grid-wrapper">
-                        <div className="features-grid">
-                            {features.map((feature, index) => (
-                                <div key={index} className="feature-card">
-                                    <div className="feature-icon-wrapper">
-                                        {feature.icon}
+            <section id="modules" className="border-t border-violet-100 bg-[linear-gradient(180deg,#fbf7ff_0%,#f7f0ff_100%)]">
+                <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start lg:px-8">
+                    <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-500">Platform Modules</p>
+                        <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">Purpose-built for modern campus teams.</h2>
+                        <p className="mt-5 text-lg leading-8 text-slate-500">
+                            SmartCampus combines the daily tools your institution already needs into a single, polished digital experience.
+                        </p>
+
+                        <div className="mt-10 space-y-4">
+                            {quickFlow.map((item) => (
+                                <div key={item.step} className="rounded-[26px] border border-violet-100 bg-white/80 p-5 shadow-[0_16px_40px_rgba(139,92,246,0.08)]">
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-violet-200 bg-violet-100 text-sm font-black text-violet-700">
+                                            {item.step}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
+                                            <p className="mt-2 text-sm leading-7 text-slate-500">{item.description}</p>
+                                        </div>
                                     </div>
-                                    <h3 className="feature-title">{feature.title}</h3>
-                                    <p className="feature-description">{feature.description}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
-                </div>
-            </section>
 
-            {/* CTA Section */}
-            <section className="cta-section">
-                <div className="cta-box">
-                    <h2 className="cta-title">Ready to transform your campus?</h2>
-                    <p className="cta-subtitle">Join thousands of students and faculty members already using SmartCampus.</p>
-                    <button onClick={() => navigate('/login')} className="btn-white">
-                        Get Started Now <ArrowRight className="w-5 h-5" />
-                    </button>
-                    
-                    <div className="cta-blobs">
-                        <div className="blob blob-1"></div>
-                        <div className="blob blob-2"></div>
+                    <div className="grid gap-6 sm:grid-cols-2">
+                        {modules.map((module) => (
+                            <FeatureCard key={module.title} {...module} />
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* Professional Multi-Column Footer */}
-            <footer className="main-footer">
-                <div className="footer-top">
-                    <div className="footer-column brand-col">
-                        <div className="footer-logo">
-                            <div className="logo-icon small">SC</div>
-                            <span className="logo-text dark">SmartCampus</span>
-                        </div>
-                        <p className="brand-desc">
-                            The comprehensive operations hub designed to modernize campus management through smart automation and real-time connectivity.
+            <section id="wayfinding" className="border-t border-violet-100 bg-[#fcf8ff]">
+                <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-center lg:px-8">
+                    <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-500">Intelligent Wayfinding</p>
+                        <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">Navigate the campus with clarity and confidence.</h2>
+                        <p className="mt-5 text-lg leading-8 text-slate-500">
+                            Help students, staff, technicians, and admins locate spaces, trace routes, and move between facilities with smarter operational context.
                         </p>
-                        <div className="social-links">
-                            <a href="#" className="social-icon"><Facebook /></a>
-                            <a href="#" className="social-icon"><Twitter /></a>
-                            <a href="#" className="social-icon"><Linkedin /></a>
-                            <a href="#" className="social-icon"><Github /></a>
+
+                        <div className="mt-8 space-y-4">
+                            {[
+                                { icon: Map, text: 'Find classrooms, labs, halls, and shared facilities in one place.' },
+                                { icon: LocateFixed, text: 'Guide technicians to maintenance hotspots faster.' },
+                                { icon: Compass, text: 'Connect route planning with bookings, schedules, and access control.' }
+                            ].map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                    <div key={item.text} className="flex items-start gap-3 rounded-2xl border border-violet-100 bg-white/80 px-4 py-4 shadow-[0_14px_35px_rgba(139,92,246,0.07)]">
+                                        <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-200 bg-violet-100 text-violet-500">
+                                            <Icon className="h-4 w-4" />
+                                        </div>
+                                        <p className="text-sm leading-7 text-slate-600">{item.text}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/login')}
+                                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-400 px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+                            >
+                                Explore SmartCampus
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                            <Link
+                                to="/verify-qr"
+                                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white/80 px-6 py-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
+                            >
+                                Verify QR Access
+                                <ScanLine className="h-4 w-4" />
+                            </Link>
                         </div>
                     </div>
-                    
-                    <div className="footer-column">
-                        <h4 className="footer-heading">Platform</h4>
-                        <ul className="footer-links-list">
-                            <li><Link to="/resources">Room Booking</Link></li>
-                            <li><Link to="/tickets">Maintenance Hub</Link></li>
-                            <li><Link to="/resources">Equipment Management</Link></li>
-                            <li><Link to="/verify-qr">QR Verification</Link></li>
-                        </ul>
-                    </div>
-                    
-                    <div className="footer-column">
-                        <h4 className="footer-heading">Resources</h4>
-                        <ul className="footer-links-list">
-                            <li><a href="#">User Manual</a></li>
-                            <li><a href="#">API Documentation</a></li>
-                            <li><a href="#">Security Overview</a></li>
-                            <li><a href="#">Help Center</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div className="footer-column contact-col">
-                        <h4 className="footer-heading">Contact Us</h4>
-                        <ul className="contact-info">
-                            <li><MapPin className="w-5 h-5" /> 123 University Ave, Campus City</li>
-                            <li><Mail className="w-5 h-5" /> support@smartcampus.edu</li>
-                            <li><Phone className="w-5 h-5" /> +1 (555) 123-4567</li>
-                        </ul>
+
+                    <div className="relative overflow-hidden rounded-[34px] border border-violet-100 bg-white/82 p-4 shadow-[0_32px_90px_rgba(168,85,247,0.12)]">
+                        <div className="absolute inset-0 opacity-[0.1]" style={{ backgroundImage: 'linear-gradient(rgba(139,92,246,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.18) 1px, transparent 1px)', backgroundSize: '34px 34px' }} />
+                        <div className="relative h-[420px] rounded-[28px] border border-violet-100 bg-[radial-gradient(circle_at_top,rgba(221,214,254,0.8),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f7f0ff_100%)]">
+                            <div className="absolute left-[6%] top-[18%] h-[2px] w-[34%] rotate-[12deg] bg-gradient-to-r from-transparent via-violet-400/80 to-transparent" />
+                            <div className="absolute left-[28%] top-[28%] h-[2px] w-[30%] rotate-[-14deg] bg-gradient-to-r from-transparent via-fuchsia-400/80 to-transparent" />
+                            <div className="absolute left-[42%] top-[56%] h-[2px] w-[36%] rotate-[8deg] bg-gradient-to-r from-transparent via-purple-400/80 to-transparent" />
+                            <div className="absolute left-[18%] top-[62%] h-[2px] w-[28%] rotate-[-24deg] bg-gradient-to-r from-transparent via-violet-300/70 to-transparent" />
+
+                            {[
+                                { name: 'Science Lab', position: 'left-[24%] top-[24%]', color: '#93c5fd' },
+                                { name: 'Library Core', position: 'left-[48%] top-[48%]', color: '#f9a8d4' },
+                                { name: 'Innovation Hub', position: 'left-[68%] top-[66%]', color: '#86efac' },
+                                { name: 'Admin Center', position: 'left-[73%] top-[26%]', color: '#fcd34d' }
+                            ].map((marker) => (
+                                <div key={marker.name} className={`absolute ${marker.position}`}>
+                                    <div className="flex flex-col items-start gap-2">
+                                        <span className="h-3.5 w-3.5 rounded-full border-2 border-white shadow-[0_0_25px_rgba(168,85,247,0.16)]" style={{ backgroundColor: marker.color }} />
+                                        <div className="rounded-full border border-violet-100 bg-white/90 px-3 py-1 text-xs font-medium text-slate-700 backdrop-blur">
+                                            {marker.name}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <div className="absolute bottom-5 left-5 right-5 rounded-[24px] border border-violet-100 bg-white/88 p-4 backdrop-blur-xl">
+                                <div className="grid gap-4 sm:grid-cols-3">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-[0.18em] text-violet-500">Route confidence</p>
+                                        <p className="mt-2 text-2xl font-black text-slate-900">96%</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs uppercase tracking-[0.18em] text-violet-500">Navigation assists</p>
+                                        <p className="mt-2 text-2xl font-black text-slate-900">24/7</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs uppercase tracking-[0.18em] text-violet-500">Connected stops</p>
+                                        <p className="mt-2 text-2xl font-black text-slate-900">18</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div className="footer-bottom">
-                    <div className="footer-copyright">
-                        &copy; 2026 SmartCampus Operations Hub. All rights reserved.
+            </section>
+
+            <section className="border-t border-violet-100 bg-[linear-gradient(180deg,#fcf8ff_0%,#f4ebff_100%)]">
+                <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+                    <div className="overflow-hidden rounded-[34px] border border-violet-100 bg-[linear-gradient(135deg,#ffffff,#f6edff)] p-8 shadow-[0_30px_100px_rgba(168,85,247,0.12)] lg:p-10">
+                        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.6fr)] lg:items-end">
+                            <div>
+                                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-500">Built for smart campuses</p>
+                                <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">Deliver a polished digital experience from first click to daily operations.</h2>
+                                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-500">
+                                    Redefined for a modern audience, SmartCampus now feels like a premium control center while staying aligned with your current color palette and product vision.
+                                </p>
+                            </div>
+
+                            <div className="grid gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/login')}
+                                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-400 px-6 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+                                >
+                                    Launch Platform
+                                    <ArrowRight className="h-4 w-4" />
+                                </button>
+                                <Link
+                                    to="/verify-qr"
+                                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white/80 px-6 py-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
+                                >
+                                    Public QR Verification
+                                    <ScanLine className="h-4 w-4" />
+                                </Link>
+                            </div>
+                        </div>
                     </div>
-                    <div className="footer-legal">
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Terms of Service</a>
-                        <a href="#">Cookie Policy</a>
+                </div>
+            </section>
+
+            <footer className="border-t border-violet-100 bg-black">
+                <div className="mx-auto grid max-w-7xl gap-12 px-6 py-14 lg:grid-cols-[minmax(0,1.1fr)_repeat(3,minmax(0,0.7fr))] lg:px-8">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-300 via-fuchsia-300 to-purple-400">
+                                <GraduationCap className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                                <div className="text-lg font-black text-slate-900">SmartCampus</div>
+                                <div className="text-sm text-violet-500">Operations Hub</div>
+                            </div>
+                        </div>
+                        <p className="mt-5 max-w-md text-sm leading-7 text-slate-500">
+                            A connected platform for reservations, maintenance, secure authentication, QR verification, and campus-wide operational visibility.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Platform</h3>
+                        <div className="mt-5 space-y-3 text-sm text-slate-500">
+                            <button type="button" onClick={() => scrollToSection('modules')} className="block transition hover:text-violet-600">Smart reservations</button>
+                            <button type="button" onClick={() => scrollToSection('pulse')} className="block transition hover:text-violet-600">Campus pulse</button>
+                            <Link to="/verify-qr" className="block transition hover:text-violet-600">QR verification</Link>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Support</h3>
+                        <div className="mt-5 space-y-3 text-sm text-slate-500">
+                            <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-violet-500" /> support@smartcampus.edu</div>
+                            <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-violet-500" /> +1 (555) 123-4567</div>
+                            <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-violet-500" /> Campus Operations Center</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Built for</h3>
+                        <div className="mt-5 space-y-3 text-sm text-slate-500">
+                            <div className="flex items-center gap-2"><Users className="h-4 w-4 text-violet-500" /> Students & faculty</div>
+                            <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-violet-500" /> Technicians</div>
+                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-violet-500" /> Admin teams</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="border-t border-violet-100">
+                    <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between lg:px-8">
+                        <p>© 2026 SmartCampus Operations Hub. Intelligent management in motion.</p>
+                        <div className="flex flex-wrap items-center gap-5">
+                            <button type="button" onClick={() => scrollToSection('overview')} className="transition hover:text-violet-600">Overview</button>
+                            <button type="button" onClick={() => scrollToSection('wayfinding')} className="transition hover:text-violet-600">Wayfinding</button>
+                            <button type="button" onClick={() => navigate('/login')} className="transition hover:text-violet-600">Get Started</button>
+                        </div>
                     </div>
                 </div>
             </footer>
