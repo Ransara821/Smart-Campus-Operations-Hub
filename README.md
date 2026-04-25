@@ -1,7 +1,7 @@
 # Smart-Campus-Operations-Hub
 **IT3030 – PAF Assignment 2026**
 
-### Step 1 — Clone the repository
+### 
 ```bash
 git clone https://github.com/Ransara821/Smart-Campus-Operations-Hub.git
 ```
