@@ -2,10 +2,31 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Check, X as XIcon, Calendar, Clock, Filter, Users, Copy, CheckCheck, Trash2, QrCode, FileText } from 'lucide-react';
+import {
+    Plus, Check, X as XIcon, Calendar, Clock, Filter,
+    Users, Copy, CheckCheck, Trash2, QrCode, FileText,
+    ChevronDown, ScanLine, ShieldCheck, AlertCircle
+} from 'lucide-react';
 import { BookingForm } from '../components/BookingForm';
 import { ToastContainer } from '../components/Toast';
 import { useToast } from '../components/useToast';
+
+/* ── Status config ── */
+const STATUS = {
+    APPROVED: { label: 'Approved', dot: '#10b981', badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60', bar: 'bg-emerald-400' },
+    PENDING: { label: 'Pending', dot: '#f59e0b', badge: 'bg-amber-50  text-amber-700  ring-amber-200/60', bar: 'bg-amber-400' },
+    REJECTED: { label: 'Rejected', dot: '#ef4444', badge: 'bg-rose-50   text-rose-700   ring-rose-200/60', bar: 'bg-rose-400' },
+    CANCELLED: { label: 'Cancelled', dot: '#94a3b8', badge: 'bg-slate-50  text-slate-500  ring-slate-200/60', bar: 'bg-slate-300' },
+};
+const getStatus = (s) => STATUS[s] || STATUS.CANCELLED;
+
+/* ── Small meta row ── */
+const MetaRow = ({ icon: Icon, children }) => (
+    <div className="flex items-center gap-2.5 text-[13px] text-slate-500 font-medium">
+        <Icon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+        <span className="leading-snug">{children}</span>
+    </div>
+);
 
 export const BookingsPage = () => {
     const { user } = useAuth();
@@ -18,123 +39,59 @@ export const BookingsPage = () => {
     const [rejectionReason, setRejectionReason] = useState('');
     const [rejectingBookingId, setRejectingBookingId] = useState(null);
     const [copiedQR, setCopiedQR] = useState(null);
+    const [expandedQR, setExpandedQR] = useState(null);
     const [attendanceCounts, setAttendanceCounts] = useState({});
     const [viewingAttendance, setViewingAttendance] = useState(null);
     const [attendanceList, setAttendanceList] = useState([]);
-    const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, resourceName }
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-    // For Admin and Technician, fetch all. For User, fetch my-bookings.
     const fetchBookings = async () => {
         try {
             setLoading(true);
             const url = (user.role === 'ADMIN' || user.role === 'TECHNICIAN')
-                ? '/api/bookings'
-                : '/api/bookings/my-bookings';
-
+                ? '/api/bookings' : '/api/bookings/my-bookings';
             const res = await axios.get(url, { withCredentials: true });
             setBookings(res.data);
-            
-            // Fetch attendance counts for each approved booking
             const counts = {};
             for (const booking of res.data) {
                 if (booking.status === 'APPROVED') {
                     try {
-                        const attendanceRes = await axios.get(`/api/bookings/${booking.id}/attendance`, { withCredentials: true });
-                        counts[booking.id] = attendanceRes.data.totalAttendees || 0;
-                    } catch (err) {
-                        counts[booking.id] = 0;
-                    }
+                        const ar = await axios.get(`/api/bookings/${booking.id}/attendance`, { withCredentials: true });
+                        counts[booking.id] = ar.data.totalAttendees || 0;
+                    } catch { counts[booking.id] = 0; }
                 }
             }
             setAttendanceCounts(counts);
-        } catch (error) {
-            console.error("Failed to fetch bookings", error);
-        } finally {
-            setLoading(false);
-        }
+        } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
+    useEffect(() => { fetchBookings(); }, [user.role]);
+
     useEffect(() => {
-        fetchBookings();
-    }, [user.role]);
-    
-    // Separate effect for auto-refresh - fetch counts every 5 seconds
-    useEffect(() => {
-        const fetchAttendanceCountsInterval = async () => {
+        const refresh = async () => {
             try {
                 const url = (user.role === 'ADMIN' || user.role === 'TECHNICIAN')
-                    ? '/api/bookings'
-                    : '/api/bookings/my-bookings';
-
-                console.log('🔄 Fetching bookings from:', url);
+                    ? '/api/bookings' : '/api/bookings/my-bookings';
                 const res = await axios.get(url, { withCredentials: true });
-                console.log('📦 Total bookings:', res.data.length);
-                
                 const counts = {};
-                let approvedCount = 0;
-                
-                for (const booking of res.data) {
-                    if (booking.status === 'APPROVED') {
-                        approvedCount++;
+                for (const b of res.data) {
+                    if (b.status === 'APPROVED') {
                         try {
-                            console.log(`  📊 Fetching attendance for ${booking.resourceName} (ID: ${booking.id})`);
-                            const attendanceRes = await axios.get(`/api/bookings/${booking.id}/attendance`, { withCredentials: true });
-                            const newCount = attendanceRes.data.totalAttendees || 0;
-                            counts[booking.id] = newCount;
-                            console.log(`     Result: ${newCount}/${booking.expectedAttendees}`);
-                        } catch (err) {
-                            console.error(`     ❌ Failed to fetch attendance for ${booking.id}:`, err.response?.data || err.message);
-                            counts[booking.id] = 0;
-                        }
+                            const ar = await axios.get(`/api/bookings/${b.id}/attendance`, { withCredentials: true });
+                            counts[b.id] = ar.data.totalAttendees || 0;
+                        } catch { counts[b.id] = 0; }
                     }
                 }
-                
-                console.log(`✅ Processed ${approvedCount} approved bookings`);
-                
-                setAttendanceCounts(prevCounts => {
-                    // Log changes
-                    const bookingIds = new Set([...Object.keys(prevCounts), ...Object.keys(counts)]);
-                    let changesDetected = false;
-                    bookingIds.forEach(id => {
-                        if (prevCounts[id] !== counts[id]) {
-                            const booking = res.data.find(b => b.id === id);
-                            console.log(`🔔 ATTENDANCE CHANGED for ${booking?.resourceName || id}: ${prevCounts[id] || 0} → ${counts[id]}/${booking?.expectedAttendees || '?'}`);
-                            changesDetected = true;
-                        }
-                    });
-                    if (!changesDetected) {
-                        console.log('   No changes detected');
-                    }
-                    return counts;
-                });
-            } catch (error) {
-                console.error("❌ Failed to refresh attendance counts:", error.response?.data || error.message);
-            }
+                setAttendanceCounts(counts);
+            } catch (e) { console.error(e); }
         };
-        
-        // Run immediately on mount
-        console.log('🚀 Starting attendance auto-refresh');
-        fetchAttendanceCountsInterval();
-        
-        // Set up interval for auto-refresh every 5 seconds
-        const intervalId = setInterval(() => {
-            console.log('\n⏰ Auto-refresh triggered (5s interval)');
-            fetchAttendanceCountsInterval();
-        }, 5000);
-        
-        return () => {
-            console.log('🛑 Stopping auto-refresh');
-            clearInterval(intervalId);
-        };
+        refresh();
+        const id = setInterval(refresh, 5000);
+        return () => clearInterval(id);
     }, [user.role]);
 
     useEffect(() => {
-        // Apply filters
-        if (filterStatus === 'ALL') {
-            setFilteredBookings(bookings);
-        } else {
-            setFilteredBookings(bookings.filter(b => b.status === filterStatus));
-        }
+        setFilteredBookings(filterStatus === 'ALL' ? bookings : bookings.filter(b => b.status === filterStatus));
     }, [bookings, filterStatus]);
 
     const handleStatusUpdate = async (id, status, reason = '') => {
@@ -143,496 +100,444 @@ export const BookingsPage = () => {
                 await axios.patch(`/api/bookings/${id}/cancel`, {}, { withCredentials: true });
             } else {
                 const payload = { status };
-                if (status === 'REJECTED' && reason) {
-                    payload.rejectionReason = reason;
-                }
+                if (status === 'REJECTED' && reason) payload.rejectionReason = reason;
                 await axios.put(`/api/bookings/${id}/approve`, payload, { withCredentials: true });
             }
-            setRejectingBookingId(null);
-            setRejectionReason('');
+            setRejectingBookingId(null); setRejectionReason('');
             fetchBookings();
-        } catch (error) {
-            showToast('Failed to update status. Please try again.', 'error');
-        }
-    };
-
-    const handleRejectClick = (bookingId) => {
-        setRejectingBookingId(bookingId);
-    };
-
-    const confirmReject = () => {
-        if (!rejectionReason.trim()) {
-            showToast('Please provide a reason for rejection.', 'warning');
-            return;
-        }
-        handleStatusUpdate(rejectingBookingId, 'REJECTED', rejectionReason);
+        } catch { showToast('Failed to update status.', 'error'); }
     };
 
     const copyQRCode = (qrData, bookingId) => {
-        // Copy the full URL, not just the token
         const qrUrl = `${import.meta.env.VITE_NETWORK_URL || window.location.origin}/verify-qr?qrData=${encodeURIComponent(qrData)}`;
-        console.log('Copying QR URL:', qrUrl);
-        
-        // Try modern clipboard API first, fallback to textarea method
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(qrUrl)
-                .then(() => {
-                    console.log('✅ QR URL copied successfully (Clipboard API)');
-                    setCopiedQR(bookingId);
-                    setTimeout(() => setCopiedQR(null), 2000);
-                })
-                .catch(err => {
-                    console.error('❌ Clipboard API failed:', err);
-                    fallbackCopy(qrUrl, bookingId);
-                });
-        } else {
-            // Fallback for non-secure contexts (HTTP)
-            fallbackCopy(qrUrl, bookingId);
-        }
+        const doCopy = (text) => {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            try { document.execCommand('copy'); setCopiedQR(bookingId); setTimeout(() => setCopiedQR(null), 2000); }
+            catch { showToast('Failed to copy.', 'warning'); }
+            document.body.removeChild(ta);
+        };
+        if (navigator.clipboard && window.isSecureContext)
+            navigator.clipboard.writeText(qrUrl).then(() => { setCopiedQR(bookingId); setTimeout(() => setCopiedQR(null), 2000); }).catch(() => doCopy(qrUrl));
+        else doCopy(qrUrl);
     };
 
-    const fallbackCopy = (text, bookingId) => {
-        // Create temporary textarea
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-            const successful = document.execCommand('copy');
-            if (successful) {
-                console.log('✅ QR URL copied successfully (fallback method)');
-                setCopiedQR(bookingId);
-                setTimeout(() => setCopiedQR(null), 2000);
-            } else {
-                console.error('❌ Fallback copy failed');
-                showToast('Failed to copy. Please copy manually.', 'warning');
-            }
-        } catch (err) {
-            console.error('❌ Fallback copy error:', err);
-            showToast('Failed to copy. Please copy manually.', 'warning');
-        } finally {
-            document.body.removeChild(textArea);
-        }
-    };
-
-    const handleDeleteBooking = (bookingId, resourceName) => {
-        setDeleteConfirm({ id: bookingId, resourceName });
-    };
-
+    const handleDeleteBooking = (id, resourceName) => setDeleteConfirm({ id, resourceName });
     const confirmDelete = async () => {
         try {
             await axios.delete(`/api/bookings/${deleteConfirm.id}`, { withCredentials: true });
-            setDeleteConfirm(null);
-            fetchBookings();
-        } catch (error) {
-            showToast(error.response?.data?.error || 'Failed to delete booking.', 'error');
-            setDeleteConfirm(null);
-        }
+            setDeleteConfirm(null); fetchBookings();
+        } catch (e) { showToast(e.response?.data?.error || 'Failed to delete.', 'error'); setDeleteConfirm(null); }
     };
-    
+
     const viewAttendance = async (bookingId) => {
         try {
             const res = await axios.get(`/api/bookings/${bookingId}/attendance`, { withCredentials: true });
             setAttendanceList(res.data.attendanceList || []);
             setViewingAttendance(res.data);
-        } catch (error) {
-            showToast('Failed to fetch attendance data.', 'error');
-        }
+        } catch { showToast('Failed to fetch attendance.', 'error'); }
     };
+    //..
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'APPROVED': return 'bg-green-100 text-green-800';
-            case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-            case 'REJECTED': return 'bg-red-100 text-red-800';
-            case 'CANCELLED': return 'bg-gray-100 text-gray-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };
+    /* ── Filter tabs ── */
+    const TABS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+    const tabCounts = TABS.reduce((acc, t) => {
+        acc[t] = t === 'ALL' ? bookings.length : bookings.filter(b => b.status === t).length;
+        return acc;
+    }, {});
+    //..
 
     return (
         <>
-        <div className="p-8 w-full max-w-[1400px] mx-auto bg-[#fafafa]/30 min-h-screen">
-            <div className="flex justify-between items-start mb-8">
-                <div>
-                    <h1 className="text-[36px] font-extrabold text-gray-900 tracking-tight leading-tight mb-2">
-                        {user.role === 'ADMIN' ? 'Manage Bookings' : 
-                         user.role === 'TECHNICIAN' ? 'All Bookings' : 'My Bookings'}
-                    </h1>
-                    <p className="text-gray-500 text-[15px] font-medium">Manage your facility and equipment reservations.</p>
+            <div className="min-h-screen bg-[#f8f9fc] px-6 py-8 md:px-10 lg:px-14 w-full max-w-[1440px] mx-auto">
+
+                {/* ── Page Header ── */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8">
+                    <div>
+                        <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-indigo-500 mb-1.5">
+                            {user.role === 'ADMIN' ? 'Administration' : user.role === 'TECHNICIAN' ? 'Technician View' : 'My Workspace'}
+                        </p>
+                        <h1 className="text-[28px] font-black text-slate-900 tracking-tight leading-none">
+                            {user.role === 'ADMIN' ? 'Manage Bookings' : user.role === 'TECHNICIAN' ? 'All Bookings' : 'My Bookings'}
+                        </h1>
+                        <p className="text-slate-400 text-[13.5px] font-medium mt-1.5">
+                            {filteredBookings.length} {filterStatus === 'ALL' ? 'total' : filterStatus.toLowerCase()} reservation{filteredBookings.length !== 1 ? 's' : ''}
+                        </p>
+                    </div>
+                    {user.role === 'USER' && (
+                        <button
+                            onClick={() => setIsFormOpen(true)}
+                            className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold text-[13.5px] transition-all duration-200 shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap"
+                        >
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
+                            New Booking
+                        </button>
+                    )}
                 </div>
-                {user.role === 'USER' && (
-                    <button 
-                        onClick={() => setIsFormOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-[#1a56db] text-white rounded-xl font-bold text-[15px] hover:bg-[#1e4ebd] transition shadow-md"
-                    >
-                        <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />
-                        New Booking
-                    </button>
+
+                {/* ── Admin QR Banner ── */}
+                {user.role === 'ADMIN' && (
+                    <div className="mb-7 flex items-center gap-4 px-5 py-4 bg-white rounded-2xl border border-indigo-100 shadow-sm shadow-indigo-50">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-200">
+                            <ScanLine className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[13px] font-bold text-slate-800 mb-0.5">QR Code Check-in Verification</p>
+                            <p className="text-[12.5px] text-slate-400 leading-snug">
+                                Navigate to the <span className="font-semibold text-indigo-600">Verify QR</span> page to authenticate approved bookings and manage campus check-ins.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Filter Tabs ── */}
+                <div className="mb-7 flex items-center gap-1.5 bg-white border border-slate-100 rounded-2xl p-1.5 w-fit shadow-sm overflow-x-auto">
+                    {TABS.map(tab => {
+                        const active = filterStatus === tab;
+                        const cfg = tab !== 'ALL' ? getStatus(tab) : null;
+                        return (
+                            <button
+                                key={tab}
+                                onClick={() => setFilterStatus(tab)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12.5px] font-bold transition-all duration-200 whitespace-nowrap
+                                ${active
+                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {cfg && (
+                                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: active ? 'rgba(255,255,255,0.7)' : cfg.dot }} />
+                                )}
+                                {tab === 'ALL' ? 'All' : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                                <span className={`text-[10.5px] font-black px-1.5 py-0.5 rounded-md min-w-[18px] text-center ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                    {tabCounts[tab]}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* ── Loading ── */}
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-28 gap-3">
+                        <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                        <p className="text-[13px] text-slate-400 font-medium">Loading reservations…</p>
+                    </div>
+                ) : filteredBookings.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-28 gap-4">
+                        <div className="w-16 h-16 bg-white rounded-2xl border border-dashed border-slate-200 flex items-center justify-center shadow-sm">
+                            <Calendar className="w-7 h-7 text-slate-300" />
+                        </div>
+                        <div className="text-center">
+                            <p className="font-bold text-slate-700 text-[15px]">No bookings found</p>
+                            <p className="text-slate-400 text-[13px] mt-1">
+                                {filterStatus !== 'ALL' ? `No ${filterStatus.toLowerCase()} bookings at the moment.` : "You don't have any bookings yet."}
+                            </p>
+                        </div>
+                        {user.role === 'USER' && (
+                            <button onClick={() => setIsFormOpen(true)}
+                                className="mt-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-[13px] font-bold hover:bg-indigo-700 transition shadow-md shadow-indigo-200">
+                                Create First Booking
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    /* ── Grid ── */
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        {filteredBookings.map((booking) => {
+                            const st = getStatus(booking.status);
+                            const isQROpen = expandedQR === booking.id;
+                            const checkedIn = attendanceCounts[booking.id] ?? 0;
+                            const total = booking.expectedAttendees;
+
+                            return (
+                                <div
+                                    key={booking.id}
+                                    className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-100 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-0.5"
+                                >
+                                    {/* ── Top accent bar ── */}
+                                    <div className={`h-[3px] w-full ${st.bar}`} />
+
+                                    {/* ── Card Body ── */}
+                                    <div className="px-5 pt-5 pb-4 flex flex-col flex-1 gap-4">
+
+                                        {/* Header row */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <h3 className="text-[15.5px] font-bold text-slate-900 leading-snug truncate">
+                                                    {booking.resourceName}
+                                                </h3>
+                                                <p className="text-[12px] text-slate-400 font-medium mt-0.5 truncate">
+                                                    {booking.userName || 'Unknown User'}
+                                                </p>
+                                            </div>
+                                            <span className={`flex-shrink-0 inline-flex items-center gap-1.5 text-[10.5px] px-2.5 py-1 rounded-lg font-bold ring-1 ${st.badge}`}>
+                                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: st.dot }} />
+                                                {st.label.toUpperCase()}
+                                            </span>
+                                        </div>
+
+                                        {/* Meta info */}
+                                        <div className="space-y-2.5">
+                                            <MetaRow icon={Calendar}>
+                                                {new Date(booking.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </MetaRow>
+                                            <MetaRow icon={Clock}>
+                                                {new Date(booking.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                                {' – '}
+                                                {new Date(booking.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                            </MetaRow>
+                                            {total != null && (
+                                                <div className="flex items-center justify-between">
+                                                    <MetaRow icon={Users}>
+                                                        {booking.status === 'APPROVED' ? (
+                                                            <span><span className="font-bold text-indigo-600">{checkedIn}</span> <span className="text-slate-400">/</span> {total} checked in</span>
+                                                        ) : (
+                                                            <span>{total} attendee{total !== 1 ? 's' : ''}</span>
+                                                        )}
+                                                    </MetaRow>
+                                                    {booking.status === 'APPROVED' && checkedIn > 0 && (
+                                                        <button onClick={() => viewAttendance(booking.id)}
+                                                            className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
+                                                            View list
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {booking.purpose && (
+                                                <MetaRow icon={FileText}>
+                                                    <span className="line-clamp-1">{booking.purpose}</span>
+                                                </MetaRow>
+                                            )}
+                                        </div>
+
+                                        {/* Attendance progress bar */}
+                                        {booking.status === 'APPROVED' && total > 0 && (
+                                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                                                    style={{ width: `${Math.min((checkedIn / total) * 100, 100)}%` }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Rejection reason */}
+                                        {booking.rejectionReason && (
+                                            <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-100 rounded-xl">
+                                                <AlertCircle className="w-3.5 h-3.5 text-rose-500 flex-shrink-0 mt-0.5" />
+                                                <p className="text-[12px] text-rose-700 font-medium leading-snug">
+                                                    <span className="font-bold">Reason:</span> {booking.rejectionReason}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* ── Card Footer / Actions ── */}
+                                    <div className="px-5 pb-5 flex flex-col gap-2.5 border-t border-slate-50 pt-4">
+
+                                        {/* QR Section */}
+                                        {booking.status === 'APPROVED' && booking.qrValidationData && (
+                                            <div className="rounded-xl overflow-hidden border border-slate-100">
+                                                <button
+                                                    onClick={() => setExpandedQR(isQROpen ? null : booking.id)}
+                                                    className="w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[12.5px] font-bold transition-colors"
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        <QrCode className="w-3.5 h-3.5" />
+                                                        Check-in QR Code
+                                                    </span>
+                                                    <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform duration-200 ${isQROpen ? 'rotate-180' : ''}`} />
+                                                </button>
+                                                {isQROpen && (
+                                                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50">
+                                                        <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                                            <QRCodeSVG
+                                                                value={`${import.meta.env.VITE_NETWORK_URL || window.location.origin}/verify-qr?qrData=${encodeURIComponent(booking.qrValidationData)}`}
+                                                                size={120}
+                                                                level="M"
+                                                            />
+                                                        </div>
+                                                        <p className="text-[11.5px] font-semibold text-slate-500">Scan to check in at this venue</p>
+                                                        <button
+                                                            onClick={() => copyQRCode(booking.qrValidationData, booking.id)}
+                                                            className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-bold border transition-all duration-200
+                                                            ${copiedQR === booking.id
+                                                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                                                    : 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700'}`}
+                                                        >
+                                                            {copiedQR === booking.id
+                                                                ? <><CheckCheck className="w-3.5 h-3.5" /> Link Copied!</>
+                                                                : <><Copy className="w-3.5 h-3.5" /> Copy QR Link</>}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Admin Actions */}
+                                        {user.role === 'ADMIN' && (
+                                            <div className="flex flex-col gap-2">
+                                                {booking.status === 'PENDING' && (
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <button onClick={() => handleStatusUpdate(booking.id, 'APPROVED')}
+                                                            className="flex items-center justify-center gap-1.5 py-2.5 bg-emerald-50 hover:bg-emerald-500 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-500 rounded-xl text-[12px] font-bold transition-all duration-200">
+                                                            <Check className="w-3.5 h-3.5" /> Approve
+                                                        </button>
+                                                        <button onClick={() => setRejectingBookingId(booking.id)}
+                                                            className="flex items-center justify-center gap-1.5 py-2.5 bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-500 rounded-xl text-[12px] font-bold transition-all duration-200">
+                                                            <XIcon className="w-3.5 h-3.5" /> Reject
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                <button onClick={() => handleDeleteBooking(booking.id, booking.resourceName)}
+                                                    className="flex items-center justify-center gap-1.5 py-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-xl text-[12px] font-bold transition-all duration-200">
+                                                    <Trash2 className="w-3.5 h-3.5" /> Delete Booking
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* User Actions */}
+                                        {user.role === 'USER' && (
+                                            <div className="flex items-center justify-between">
+                                                {(booking.status === 'PENDING' || booking.status === 'APPROVED') ? (
+                                                    <button onClick={() => handleStatusUpdate(booking.id, 'CANCELLED')}
+                                                        className="text-[12.5px] text-slate-400 font-semibold hover:text-rose-500 transition-colors">
+                                                        Cancel booking
+                                                    </button>
+                                                ) : <div />}
+                                                <button onClick={() => handleDeleteBooking(booking.id, booking.resourceName)}
+                                                    className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
 
-            {/* QR Verification Info Banner for Admin only */}
-            {user.role === 'ADMIN' && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-500 rounded-lg">
-                    <div className="flex items-start gap-3">
-                        <div className="bg-purple-500 rounded-full p-2 flex-shrink-0">
-                            <QRCodeSVG value="demo" size={24} className="opacity-0" />
-                            <span className="absolute text-white text-xl">📱</span>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-800 mb-1">QR Code Verification</h3>
-                            <p className="text-sm text-gray-600">
-                                Go to <span className="font-bold text-purple-700">Verify QR</span> page to scan or enter QR code data for approved bookings. 
-                                All booking details will be displayed for check-in validation.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Filters */}
-            <div className="mb-8 flex items-center justify-between bg-gray-50/80 px-6 py-4 rounded-2xl border border-gray-100">
-                <div className="flex items-center gap-4">
-                    <span className="text-sm font-bold text-gray-600">Filter By:</span>
-                    <select 
-                        value={filterStatus} 
-                        onChange={e => setFilterStatus(e.target.value)}
-                        className="px-4 py-2 bg-white rounded-xl text-sm font-bold text-gray-700 shadow-sm border border-gray-100 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer appearance-none min-w-[130px]"
-                    >
-                        <option value="ALL">All</option>
-                        <option value="PENDING">Pending</option>
-                        <option value="APPROVED">Approved</option>
-                        <option value="REJECTED">Rejected</option>
-                        <option value="CANCELLED">Cancelled</option>
-                    </select>
-                </div>
-                <span className="text-[13px] font-bold text-gray-500">
-                    Showing {filteredBookings.length} bookings
-                </span>
-            </div>
-
-            {loading ? (
-                <div className="flex justify-center py-12">
-                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56db]"></div>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredBookings.map((booking, index) => (
-                        <div key={booking.id} className="relative bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] border border-gray-100/60 p-6 flex flex-col h-full overflow-hidden hover:shadow-[0_6px_24px_-4px_rgba(26,86,219,0.12)] transition-all duration-300 group/card">
-                            {/* Status-based left accent bar */}
-                            <div className={`absolute left-0 top-0 bottom-0 w-[4px] rounded-r-sm ${
-                                booking.status === 'APPROVED' ? 'bg-green-400' :
-                                booking.status === 'PENDING'  ? 'bg-yellow-400' :
-                                booking.status === 'REJECTED' ? 'bg-red-400' :
-                                'bg-gray-300'
-                            }`}></div>
-
-                            {/* Card Header */}
-                            <div className="flex justify-between items-start mb-5 w-full pl-3">
-                                <div className="pr-3 flex-1 min-w-0">
-                                    <h3 className="text-[17px] font-bold text-gray-900 mb-0.5 leading-snug break-words">
-                                        {booking.resourceName}
-                                    </h3>
-                                    <p className="text-[12px] font-medium text-gray-400">{booking.userName || 'Unknown User'}</p>
-                                </div>
-                                <span className={`flex-shrink-0 text-[10px] px-2.5 py-1 rounded-full font-extrabold uppercase tracking-widest ${getStatusColor(booking.status)}`}>
-                                    {booking.status}
-                                </span>
-                            </div>
-
-                            {/* Card Details — all rows left-aligned with icons */}
-                            <div className="flex-grow flex flex-col pl-3 mb-5 space-y-3">
-                                {/* Date */}
-                                <div className="flex items-center gap-3">
-                                    <Calendar className="w-[15px] h-[15px] text-[#1a56db] flex-shrink-0" />
-                                    <span className="text-[13px] font-medium text-gray-600">
-                                        {new Date(booking.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </span>
-                                </div>
-
-                                {/* Time */}
-                                <div className="flex items-center gap-3">
-                                    <Clock className="w-[15px] h-[15px] text-[#1a56db] flex-shrink-0" />
-                                    <span className="text-[13px] font-medium text-gray-600">
-                                        {new Date(booking.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} – {new Date(booking.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                                    </span>
-                                </div>
-
-                                {/* Attendees */}
-                                {(booking.expectedAttendees !== undefined && booking.expectedAttendees !== null) && (
-                                    <div className="flex items-center gap-3">
-                                        <Users className="w-[15px] h-[15px] text-[#1a56db] flex-shrink-0" />
-                                        <span className="text-[13px] font-medium text-gray-600 flex-1">
-                                            {booking.status === 'APPROVED' && attendanceCounts[booking.id] !== undefined ? (
-                                                <><span className="font-bold text-[#1a56db]">{attendanceCounts[booking.id]}</span> <span className="text-gray-400">/</span> {booking.expectedAttendees} Attendees</>
-                                            ) : (
-                                                <>{booking.expectedAttendees} Attendees</>
-                                            )}
-                                        </span>
-                                        {booking.status === 'APPROVED' && attendanceCounts[booking.id] > 0 && (
-                                            <button
-                                                onClick={() => viewAttendance(booking.id)}
-                                                className="text-[11px] text-[#1a56db] hover:text-white hover:bg-[#1a56db] font-bold uppercase tracking-wide bg-blue-50 px-2 py-1 rounded-md transition-all duration-200"
-                                            >
-                                                View
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Purpose */}
-                                {booking.purpose && (
-                                    <div className="flex items-start gap-3">
-                                        <FileText className="w-[15px] h-[15px] text-[#1a56db] flex-shrink-0 mt-[1px]" />
-                                        <span className="text-[13px] font-medium text-gray-600 line-clamp-2">{booking.purpose}</span>
-                                    </div>
-                                )}
-
-                                {/* Rejection reason */}
-                                {booking.rejectionReason && (
-                                    <div className="p-3 bg-red-50 rounded-xl border border-red-100">
-                                        <p className="text-xs text-red-700">
-                                            <span className="font-bold">Reason:</span> {booking.rejectionReason}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Actions and QR */}
-                            <div className="mt-auto flex flex-col gap-2 pl-3 border-t border-gray-50 pt-4">
-
-                                {/* Show Check-in QR — primary blue button */}
-                                {booking.status === 'APPROVED' && booking.qrValidationData && (
-                                    <details className="group rounded-xl overflow-hidden mb-1">
-                                        <summary className="flex items-center justify-center gap-2 px-4 py-2.5 text-[13px] font-bold text-white bg-[#1a56db] hover:bg-[#1648c0] active:bg-[#1240ab] rounded-xl transition-all duration-200 list-none cursor-pointer shadow-sm hover:shadow-md hover:shadow-blue-200">
-                                            <QrCode className="w-[15px] h-[15px]" />
-                                            Show Check-in QR
-                                        </summary>
-                                        <div className="mt-2 p-4 flex flex-col items-center bg-gray-50 border border-gray-100 rounded-xl">
-                                            <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 mb-3">
-                                                <QRCodeSVG 
-                                                    value={`${import.meta.env.VITE_NETWORK_URL || window.location.origin}/verify-qr?qrData=${encodeURIComponent(booking.qrValidationData)}`}
-                                                    size={110} 
-                                                    level="M" 
-                                                />
-                                            </div>
-                                            <p className="text-[11px] font-semibold text-[#1a56db] mb-3 text-center">📱 Scan to check in</p>
-                                            <button
-                                                onClick={() => copyQRCode(booking.qrValidationData, booking.id)}
-                                                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-[#1a56db] hover:text-white hover:border-[#1a56db] transition-all duration-200 text-xs font-bold"
-                                            >
-                                                {copiedQR === booking.id
-                                                    ? <><CheckCheck className="w-[14px] h-[14px] text-green-500" /> <span className="text-green-600">Copied!</span></>
-                                                    : <><Copy className="w-[14px] h-[14px]" /> Copy QR Link</>}
-                                            </button>
-                                        </div>
-                                    </details>
-                                )}
-
-                                {/* Admin Actions */}
-                                {user.role === 'ADMIN' && (
-                                    <div className="space-y-2 w-full">
-                                        {booking.status === 'PENDING' && (
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleStatusUpdate(booking.id, 'APPROVED')}
-                                                    className="flex items-center gap-1.5 flex-1 justify-center px-3 py-2 bg-green-50 text-green-700 font-bold text-xs rounded-xl border border-green-100 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
-                                                >
-                                                    <Check className="w-3.5 h-3.5" /> APPROVE
-                                                </button>
-                                                <button
-                                                    onClick={() => handleRejectClick(booking.id)}
-                                                    className="flex items-center gap-1.5 flex-1 justify-center px-3 py-2 bg-red-50 text-red-600 font-bold text-xs rounded-xl border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200"
-                                                >
-                                                    <XIcon className="w-3.5 h-3.5" /> REJECT
-                                                </button>
-                                            </div>
-                                        )}
-                                        <button 
-                                            onClick={() => handleDeleteBooking(booking.id, booking.resourceName)} 
-                                            className="flex items-center gap-1.5 justify-center w-full px-3 py-2 bg-white border border-red-100 text-red-500 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200 text-xs font-bold"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                            DELETE
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* User Action Row */}
-                                {user.role === 'USER' && (
-                                    <div className="flex justify-between items-center w-full">
-                                        {(booking.status === 'PENDING' || booking.status === 'APPROVED') ? (
-                                            <button
-                                                onClick={() => handleStatusUpdate(booking.id, 'CANCELLED')}
-                                                className="text-gray-500 text-[13px] font-semibold hover:text-red-500 hover:underline transition-all duration-200"
-                                            >
-                                                Cancel Booking
-                                            </button>
-                                        ) : <div />}
-                                        <button 
-                                            onClick={() => handleDeleteBooking(booking.id, booking.resourceName)} 
-                                            className="ml-auto p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
-                                            title="Delete Booking"
-                                        >
-                                            <Trash2 className="w-[17px] h-[17px]" strokeWidth={2} />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                    {filteredBookings.length === 0 && (
-                        <div className="col-span-full py-16 px-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                             <div className="flex flex-col items-center justify-center space-y-3">
-                                 <Calendar className="w-12 h-12 text-gray-300" />
-                                 <h3 className="text-lg font-bold text-gray-700">No bookings found</h3>
-                                 <p className="text-sm text-gray-500">
-                                     {filterStatus !== 'ALL' ? `You don't have any ${filterStatus.toLowerCase()} bookings at the moment.` : "You don't have any bookings yet."}
-                                 </p>
-                             </div>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Rejection Reason Modal */}
+            {/* ── Reject Modal ── */}
             {rejectingBookingId && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
-                        <div className="p-6 border-b border-gray-100">
-                            <h3 className="text-xl font-bold text-gray-800">Reject Booking</h3>
-                            <p className="text-sm text-gray-500 mt-1">Please provide a reason for rejection</p>
-                        </div>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                        <div className="h-1 bg-gradient-to-r from-rose-500 to-pink-500" />
                         <div className="p-6">
+                            <div className="mb-5">
+                                <h3 className="text-[17px] font-bold text-slate-900 mb-1">Reject Booking</h3>
+                                <p className="text-[13px] text-slate-400">Provide a clear reason so the requester can understand the decision.</p>
+                            </div>
                             <textarea
                                 value={rejectionReason}
                                 onChange={e => setRejectionReason(e.target.value)}
-                                placeholder="E.g., Resource unavailable, conflict with scheduled maintenance..."
+                                placeholder="e.g. Resource unavailable due to scheduled maintenance…"
                                 rows="4"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                            ></textarea>
-                        </div>
-                        <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
-                            <button
-                                onClick={() => { setRejectingBookingId(null); setRejectionReason(''); }}
-                                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmReject}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition"
-                            >
-                                Reject Booking
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isFormOpen && (
-                <BookingForm
-                    onClose={() => { setIsFormOpen(false); fetchBookings(); }}
-                    showToast={showToast}
-                />
-            )}
-
-            {/* ── Delete Confirmation Modal ── */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
-                        {/* Red top bar */}
-                        <div className="h-1.5 bg-gradient-to-r from-red-500 to-rose-500" />
-                        <div className="p-6">
-                            {/* Icon */}
-                            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mx-auto mb-4">
-                                <Trash2 className="w-7 h-7 text-red-500" />
-                            </div>
-                            {/* Text */}
-                            <h3 className="text-xl font-bold text-gray-900 text-center mb-1">Delete Booking</h3>
-                            <p className="text-sm text-gray-500 text-center mb-1">
-                                Are you sure you want to delete
-                            </p>
-                            <p className="text-sm font-semibold text-gray-800 text-center mb-5">
-                                &ldquo;{deleteConfirm.resourceName}&rdquo;?
-                            </p>
-                            <p className="text-xs text-red-400 text-center mb-6">This action cannot be undone.</p>
-                            {/* Buttons */}
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setDeleteConfirm(null)}
-                                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition"
-                                >
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-[13.5px] text-slate-700 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-400 resize-none transition"
+                            />
+                            <div className="flex gap-3 mt-4">
+                                <button onClick={() => { setRejectingBookingId(null); setRejectionReason(''); }}
+                                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-[13px] hover:bg-slate-50 transition">
                                     Cancel
                                 </button>
-                                <button
-                                    onClick={confirmDelete}
-                                    className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold text-sm hover:from-red-600 hover:to-rose-600 transition shadow-md shadow-red-200"
-                                >
-                                    Yes, Delete
+                                <button onClick={() => {
+                                    if (!rejectionReason.trim()) { showToast('Please provide a reason.', 'warning'); return; }
+                                    handleStatusUpdate(rejectingBookingId, 'REJECTED', rejectionReason);
+                                }}
+                                    className="flex-1 py-2.5 rounded-xl bg-rose-600 text-white font-semibold text-[13px] hover:bg-rose-700 transition shadow-md shadow-rose-100">
+                                    Confirm Rejection
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
-            
-            {/* Attendance List Modal */}
-            {viewingAttendance && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="p-6 border-b border-gray-100">
-                            <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-xl font-bold text-gray-800">Attendance List</h3>
-                                <button
-                                    onClick={() => setViewingAttendance(null)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <XIcon className="w-5 h-5" />
+
+            {/* ── Delete Modal ── */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                        <div className="h-1 bg-gradient-to-r from-rose-500 to-pink-500" />
+                        <div className="p-7 text-center">
+                            <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center mx-auto mb-5">
+                                <Trash2 className="w-7 h-7 text-rose-500" />
+                            </div>
+                            <h3 className="text-[17px] font-bold text-slate-900 mb-1.5">Delete Booking</h3>
+                            <p className="text-[13px] text-slate-400 mb-1">You're about to permanently delete</p>
+                            <p className="text-[14px] font-semibold text-slate-800 mb-1">"{deleteConfirm.resourceName}"</p>
+                            <p className="text-[12px] text-rose-400 font-medium mb-6">This action cannot be undone.</p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-[13px] hover:bg-slate-50 transition">
+                                    Cancel
+                                </button>
+                                <button onClick={confirmDelete}
+                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold text-[13px] hover:from-rose-600 hover:to-pink-600 transition shadow-md shadow-rose-100">
+                                    Delete
                                 </button>
                             </div>
-                            <p className="text-sm text-gray-600">{viewingAttendance.booking?.resourceName}</p>
-                            <div className="mt-3 flex items-center gap-3 text-sm">
-                                <Users className="w-5 h-5 text-blue-600" />
-                                <span className="font-bold text-blue-600 text-lg">
-                                    {viewingAttendance.totalAttendees} / {viewingAttendance.expectedAttendees}
-                                </span>
-                                <span className="text-gray-600">students checked in</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Attendance Modal ── */}
+            {viewingAttendance && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                        <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
+                        {/* Header */}
+                        <div className="px-6 py-5 border-b border-slate-100">
+                            <div className="flex items-start justify-between mb-3">
+                                <div>
+                                    <h3 className="text-[16px] font-bold text-slate-900">Attendance List</h3>
+                                    <p className="text-[12.5px] text-slate-400 mt-0.5">{viewingAttendance.booking?.resourceName}</p>
+                                </div>
+                                <button onClick={() => setViewingAttendance(null)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition">
+                                    <XIcon className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-xl">
+                                <Users className="w-5 h-5 text-indigo-600" />
+                                <div>
+                                    <span className="text-[18px] font-black text-indigo-700">{viewingAttendance.totalAttendees}</span>
+                                    <span className="text-slate-400 text-[13px] font-medium"> / {viewingAttendance.expectedAttendees} students checked in</span>
+                                </div>
+                                <div className="ml-auto flex-shrink-0">
+                                    <div className="w-20 h-2 bg-white rounded-full overflow-hidden">
+                                        <div className="h-full bg-indigo-500 rounded-full transition-all"
+                                            style={{ width: `${Math.min((viewingAttendance.totalAttendees / viewingAttendance.expectedAttendees) * 100, 100)}%` }} />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div className="p-6 overflow-y-auto flex-1">
+                        {/* List */}
+                        <div className="flex-1 overflow-y-auto px-6 py-4">
                             {attendanceList.length === 0 ? (
-                                <p className="text-center text-gray-500 py-8">No students have checked in yet.</p>
+                                <div className="flex flex-col items-center justify-center py-12 gap-2">
+                                    <Users className="w-10 h-10 text-slate-200" />
+                                    <p className="text-[13px] text-slate-400 font-medium">No students checked in yet</p>
+                                </div>
                             ) : (
-                                <div className="space-y-3">
-                                    {attendanceList.map((attendance, index) => (
-                                        <div key={attendance.id} className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                            <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                                                {index + 1}
+                                <div className="space-y-2.5">
+                                    {attendanceList.map((a, i) => (
+                                        <div key={a.id} className="flex items-center gap-3.5 p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors">
+                                            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white text-[12px] font-black flex items-center justify-center flex-shrink-0 shadow-sm shadow-indigo-200">
+                                                {i + 1}
                                             </div>
-                                            <div className="flex-1">
-                                                <p className="font-semibold text-gray-800">{attendance.userName}</p>
-                                                {attendance.studentId && (
-                                                    <p className="text-xs text-blue-600 font-medium">🆔 {attendance.studentId}</p>
-                                                )}
-                                                {attendance.userEmail && (
-                                                    <p className="text-xs text-gray-500">📧 {attendance.userEmail}</p>
-                                                )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-slate-800 text-[13.5px] truncate">{a.userName}</p>
+                                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                                    {a.studentId && <span className="text-[11px] text-indigo-600 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded-md">{a.studentId}</span>}
+                                                    {a.userEmail && <span className="text-[11px] text-slate-400 truncate">{a.userEmail}</span>}
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-gray-500">Checked in at</p>
-                                                <p className="text-sm font-medium text-gray-700">
-                                                    {new Date(attendance.checkedInAt).toLocaleTimeString([], { 
-                                                        hour: '2-digit', 
-                                                        minute: '2-digit' 
-                                                    })}
+                                            <div className="text-right flex-shrink-0">
+                                                <p className="text-[10px] text-slate-400 font-medium">Checked in</p>
+                                                <p className="text-[12.5px] font-bold text-slate-700">
+                                                    {new Date(a.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                             </div>
                                         </div>
@@ -640,22 +545,21 @@ export const BookingsPage = () => {
                                 </div>
                             )}
                         </div>
-                        
-                        <div className="p-6 border-t border-gray-100 flex justify-end">
-                            <button
-                                onClick={() => setViewingAttendance(null)}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition"
-                            >
+                        <div className="px-6 py-4 border-t border-slate-100">
+                            <button onClick={() => setViewingAttendance(null)}
+                                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[13px] transition">
                                 Close
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
 
-        {/* ── Global Toast Notifications ── */}
-        <ToastContainer toasts={toasts} removeToast={removeToast} />
+            {isFormOpen && (
+                <BookingForm onClose={() => { setIsFormOpen(false); fetchBookings(); }} showToast={showToast} />
+            )}
+
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
         </>
     );
 };
