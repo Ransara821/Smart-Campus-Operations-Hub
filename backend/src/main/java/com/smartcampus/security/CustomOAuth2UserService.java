@@ -57,7 +57,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
             log.info("Existing user found: {}, role: {}", existingUser.getEmail(), existingUser.getRole());
-            existingUser.setName(name);
             existingUser.setAvatarUrl(picture);
             existingUser.setRole(isAdminEmail(email) ? Role.ADMIN : existingUser.getRole());
             userRepository.save(existingUser);

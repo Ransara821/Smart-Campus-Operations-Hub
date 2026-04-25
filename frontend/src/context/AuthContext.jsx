@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
             console.log('Logout completed');
         } finally {
             setUser(null);
-            window.location.href = '/login';
+            window.location.href = '/login?logout=true';
         }
     };
 

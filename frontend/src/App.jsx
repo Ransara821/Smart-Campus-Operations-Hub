@@ -34,9 +34,9 @@ function usePageTitle(pathname) {
 }
 
 // ─── Sidebar ────────────────────────────────────────────────────────
-function Sidebar({ user, unreadCount, onLogout }) {
+function Sidebar({ user, unreadCount, onLogout, showLogoutConfirm, setShowLogoutConfirm }) {
   const navItems = [
-    ...(user?.role === 'ADMIN' ? [{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: 'new' }] : []),
+    ...(user?.role === 'ADMIN' ? [{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }] : []),
     { to: '/resources',     label: 'Facilities',    icon: Building2    },
     { to: '/bookings',      label: 'Bookings',      icon: CalendarDays },
     { to: '/tickets',       label: 'Tickets',       icon: Ticket       },
@@ -106,11 +106,47 @@ function Sidebar({ user, unreadCount, onLogout }) {
               {roleIcon}{user?.role || 'GUEST'}
             </div>
           </div>
-          <button onClick={onLogout} className="sidebar-logout-btn" title="Logout">
+          <button onClick={() => setShowLogoutConfirm(true)} className="sidebar-logout-btn" title="Logout">
             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+            <div className="border-b border-gray-100 px-6 py-5">
+              <h2 className="text-xl font-bold text-gray-900">Confirm Logout</h2>
+              <p className="mt-1 text-sm text-gray-500">Are you sure you want to sign out of your account?</p>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <span className="font-bold">{user?.name || 'User'}</span>
+                <span className="text-red-600"> will be signed out. You'll need to sign in again to access your account.</span>
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLogoutConfirm(false);
+                    onLogout();
+                  }}
+                  className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 font-bold text-white transition-colors hover:bg-red-700"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
@@ -140,6 +176,7 @@ function TopHeader({ pathname, unreadCount }) {
 function AppContent() {
   const { user, loading, logout } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -172,7 +209,7 @@ function AppContent() {
   if (showLayout) {
     return (
       <div className="app-layout">
-        <Sidebar user={user} unreadCount={unreadCount} onLogout={logout} />
+        <Sidebar user={user} unreadCount={unreadCount} onLogout={logout} showLogoutConfirm={showLogoutConfirm} setShowLogoutConfirm={setShowLogoutConfirm} />
         <TopHeader pathname={location.pathname} unreadCount={unreadCount} />
         <main className="app-main">
           <Routes>

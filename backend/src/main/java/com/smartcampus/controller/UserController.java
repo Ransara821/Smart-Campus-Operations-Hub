@@ -37,7 +37,7 @@ public class UserController {
         User user = userOpt.get();
         
         if (updates.containsKey("name")) {
-            user.setName((String) updates.get("name"));
+            return ResponseEntity.badRequest().body(Map.of("message", "Full Name is locked after account creation and cannot be changed."));
         }
         
         if (updates.containsKey("role")) {

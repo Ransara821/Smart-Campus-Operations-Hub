@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { X, User, Shield, Wrench, UserPlus } from 'lucide-react';
 
 export const UserEditModal = ({ user, onClose, onSave }) => {
-    const [name, setName] = useState(user.name);
     const [role, setRole] = useState(user.role);
     const [submitting, setSubmitting] = useState(false);
 
@@ -15,7 +14,7 @@ export const UserEditModal = ({ user, onClose, onSave }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
-        await onSave(user.id, { name, role });
+        await onSave(user.id, { role });
         setSubmitting(false);
     };
 
@@ -37,12 +36,12 @@ export const UserEditModal = ({ user, onClose, onSave }) => {
                         <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Full Name</label>
                         <input
                             type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white outline-none transition-all font-medium text-gray-900"
+                            value={user.name}
+                            readOnly
+                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl outline-none transition-all font-medium text-gray-700 cursor-not-allowed"
                             placeholder="John Doe"
-                            required
                         />
+                        <p className="mt-2 text-xs font-medium text-gray-500">Full Name is locked after account creation and cannot be changed.</p>
                     </div>
 
                     <div>

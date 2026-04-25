@@ -5,7 +5,7 @@ import {
     LogIn, GraduationCap, ArrowRight, Lock, Mail,
     UserPlus, Wrench, CheckCircle2, ShieldCheck, RefreshCw, KeyRound
 } from 'lucide-react';
-import loginBg from '../assets/login-bg.png';
+const loginBg = 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80';
 
 const OTP_EXPIRY_SECONDS = 600; // 10 minutes — must match backend OtpStore
 
@@ -81,6 +81,7 @@ export const LoginPage = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState('USER');
 
     // UI state
@@ -89,6 +90,7 @@ export const LoginPage = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [otpRequestInFlight, setOtpRequestInFlight] = useState(false);
+    const [showLogoutToast, setShowLogoutToast] = useState(false);
 
     // OTP state
     const [digits, setDigits] = useState(['', '', '', '', '', '']);
@@ -97,14 +99,24 @@ export const LoginPage = () => {
     const [pendingEmail, setPendingEmail] = useState('');
     const digitRefs = useRef([]);
 
+
     useEffect(() => {
-        if (searchParams.get('signup') === 'success') {
-            setSuccessMessage('Registration successful. Please sign in to continue.');
-            setMode('signin');
+        if (searchParams.get('logout') === 'true') {
+            setShowLogoutToast(true);
+            window.history.replaceState({}, document.title, '/login');
+            const t = setTimeout(() => setShowLogoutToast(false), 4000);
+            return () => clearTimeout(t);
         }
     }, [searchParams]);
 
     const isSignup = mode === 'signup';
+
+    const nameError = isSignup && name && !/^[a-zA-Z\s]+$/.test(name)
+        ? 'Full name can only contain letters.'
+        : '';
+    const emailError = email && /[A-Z]/.test(email)
+        ? 'Email must not contain uppercase letters.'
+        : '';
 
     const roleOptions = useMemo(() => ([
         { value: 'USER', label: 'User', icon: UserPlus, description: 'Book facilities and raise tickets' },
@@ -118,6 +130,18 @@ export const LoginPage = () => {
     // ── Step 1: submit credentials ───────────────────────────────────────────
     const handleSubmit = async (event) => {
         event.preventDefault();
+        if (mode === 'signup' && password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+        if (mode === 'signup' && !/^[a-zA-Z\s]+$/.test(name)) {
+            setError('Full name can only contain letters.');
+            return;
+        }
+        if (/[A-Z]/.test(email)) {
+            setError('Email must not contain uppercase letters.');
+            return;
+        }
         setSubmitting(true);
         setError('');
         setSuccessMessage('');
@@ -255,14 +279,27 @@ export const LoginPage = () => {
 
     // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4 sm:p-8 font-sans">
+        <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans relative overflow-hidden">
+            {/* ── Logout toast ── */}
+            <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-semibold text-sm transition-all duration-500 ${
+                showLogoutToast ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'
+            }`}>
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                You've been successfully signed out. See you next time!
+                <button onClick={() => setShowLogoutToast(false)} className="ml-2 text-emerald-400 hover:text-emerald-700 transition-colors text-lg leading-none">&times;</button>
+            </div>
+            {/* Faint background image */}
+            <div className="absolute inset-0 -z-10">
+                <img src={loginBg} alt="" className="w-full h-full object-cover" aria-hidden="true" />
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-xl" />
+            </div>
             <div className="max-w-5xl w-full bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col md:flex-row min-h-[600px] border border-gray-100">
 
                 {/* ── Left: Branding panel ── */}
                 <div className="w-full md:w-1/2 relative bg-[#fdfbf7] flex flex-col items-center justify-center overflow-hidden">
                     <img
                         src={loginBg}
-                        alt="Minimalist college girl with books"
+                        alt="University campus library"
                         className="absolute inset-0 w-full h-full object-cover scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent" />
@@ -315,31 +352,7 @@ export const LoginPage = () => {
                                         : 'Enter your details — we\'ll email you a verification code.'}
                                 </p>
 
-                                {/* Role selector (signup only) */}
-                                {isSignup && (
-                                    <div className="mb-6">
-                                        <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Join as</label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {roleOptions.map((option) => {
-                                                const Icon = option.icon;
-                                                const selected = role === option.value;
-                                                return (
-                                                    <button
-                                                        key={option.value}
-                                                        type="button"
-                                                        onClick={() => setRole(option.value)}
-                                                        className={`text-left border rounded-xl p-3 transition-all ${selected ? 'border-purple-500 bg-purple-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-white'}`}
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <Icon className={`w-4 h-4 ${selected ? 'text-purple-700' : 'text-gray-500'}`} />
-                                                            <span className="font-bold text-gray-800 text-xs">{option.label}</span>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
+                                {/* Role selector hidden */}
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     {isSignup && (
@@ -349,10 +362,11 @@ export const LoginPage = () => {
                                                 type="text"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white focus:border-transparent transition-all outline-none text-gray-900 text-sm font-medium"
-                                                placeholder="John Doe"
+                                                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white focus:border-transparent transition-all outline-none text-gray-900 text-sm font-medium ${nameError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200'}`}
+                                                placeholder="Enter Your Name"
                                                 required={isSignup}
                                             />
+                                            {nameError && <p className="text-xs text-red-500 font-semibold mt-1">{nameError}</p>}
                                         </div>
                                     )}
 
@@ -364,11 +378,12 @@ export const LoginPage = () => {
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white focus:border-transparent transition-all outline-none text-gray-900 text-sm font-medium"
-                                                placeholder="your@campus.edu"
+                                                className={`w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white focus:border-transparent transition-all outline-none text-gray-900 text-sm font-medium ${emailError ? 'border-red-400 focus:ring-red-400' : 'border-gray-200'}`}
+                                                placeholder="Enter Your Email"
                                                 required
                                             />
                                         </div>
+                                        {emailError && <p className="text-xs text-red-500 font-semibold mt-1">{emailError}</p>}
                                     </div>
 
                                     <div>
@@ -385,6 +400,30 @@ export const LoginPage = () => {
                                             />
                                         </div>
                                     </div>
+
+                                    {isSignup && (
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">Confirm Password</label>
+                                            <div className="relative">
+                                                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                                                <input
+                                                    type="password"
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    className={`w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white focus:border-transparent transition-all outline-none text-gray-900 text-sm font-medium ${
+                                                        confirmPassword && confirmPassword !== password
+                                                            ? 'border-red-400 focus:ring-red-400'
+                                                            : 'border-gray-200'
+                                                    }`}
+                                                    placeholder="••••••••"
+                                                    required
+                                                />
+                                            </div>
+                                            {confirmPassword && confirmPassword !== password && (
+                                                <p className="text-xs text-red-500 font-semibold mt-1">Passwords do not match</p>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {successMessage && (
                                         <div className="bg-emerald-50 text-emerald-700 px-4 py-3 rounded-xl text-sm font-bold border border-emerald-100 flex items-center gap-2">

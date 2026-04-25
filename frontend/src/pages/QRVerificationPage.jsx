@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { QrCode, CheckCircle2, XCircle, Scan, AlertTriangle, Lock, Users, ShieldCheck, ArrowRight, RotateCcw } from 'lucide-react';
+import { QrCode, CheckCircle2, XCircle, Scan, AlertTriangle, Lock, Users, ShieldCheck, ArrowRight, RotateCcw, LayoutDashboard } from 'lucide-react';
 
 /* ─────────────── Floating Label Input ─────────────── */
 const FloatingInput = ({ id, label, type = 'text', value, onChange, placeholder, required, disabled, className = '', mono = false }) => (
@@ -78,6 +78,7 @@ const DetailRow = ({ label, value, highlight, mono }) => (
 
 export const QRVerificationPage = () => {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [qrData, setQrData] = useState('');
     const [verificationResult, setVerificationResult] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -348,6 +349,19 @@ export const QRVerificationPage = () => {
             </div>
 
             <div className="relative z-10 w-full max-w-lg mx-auto">
+
+                {/* ─── Top Nav ─── */}
+                <div className="flex items-center justify-start mb-6">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/dashboard')}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-indigo-300 hover:text-white text-xs font-semibold tracking-wide transition-all hover:scale-105"
+                        style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)' }}
+                    >
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                        Admin Panel
+                    </button>
+                </div>
 
                 {/* ─── Header ─── */}
                 <div className="text-center mb-8">
