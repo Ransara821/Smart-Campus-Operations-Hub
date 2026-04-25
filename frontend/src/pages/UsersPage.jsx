@@ -14,10 +14,21 @@ export const UsersPage = () => {
     const [loading, setLoading] = useState(true);
     const [editingUser, setEditingUser] = useState(null);
     const [error, setError] = useState('');
+    const [toast, setToast] = useState({ message: '', tone: 'success' });
+    const [userToDelete, setUserToDelete] = useState(null);
 
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        if (!toast.message) {
+            return;
+        }
+
+        const timeoutId = setTimeout(() => setToast({ message: '', tone: 'success' }), 3000);
+        return () => clearTimeout(timeoutId);
+    }, [toast]);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -37,17 +48,20 @@ export const UsersPage = () => {
         try {
             await axios.put(`/api/users/${userId}`, updates);
             setEditingUser(null);
-            fetchUsers();
+            await fetchUsers();
+            setToast({ message: 'Changes saved successfully.', tone: 'success' });
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to update user');
         }
     };
 
-    const handleDeleteUser = async (userId) => {
-        if (!window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
         try {
-            await axios.delete(`/api/users/${userId}`);
-            fetchUsers();
+            await axios.delete(`/api/users/${userToDelete.id}`);
+            setUserToDelete(null);
+            await fetchUsers();
+            setToast({ message: 'Deleted Successfully', tone: 'danger' });
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to delete user');
         }
@@ -77,6 +91,13 @@ export const UsersPage = () => {
 
     return (
         <div className="p-8 w-full max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+            <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-2xl border bg-white/95 px-4 py-3 text-sm font-semibold shadow-lg backdrop-blur-sm transition-all duration-300 ${toast.message ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0 pointer-events-none'} ${toast.tone === 'danger' ? 'border-red-200 text-red-700' : 'border-emerald-200 text-emerald-700'}`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${toast.tone === 'danger' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                    {toast.tone === 'danger' ? <Trash2 className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                </div>
+                <span>{toast.message}</span>
+            </div>
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
@@ -87,7 +108,7 @@ export const UsersPage = () => {
                 </div>
                 
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                   <div className="relative flex-1 md:w-72">
+                    <div className="relative flex-1 md:w-72">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <input
                             type="text"
@@ -174,7 +195,7 @@ export const UsersPage = () => {
                                             </button>
                                             {user.id !== currentUser?.id && (
                                                 <button 
-                                                    onClick={() => handleDeleteUser(user.id)}
+                                                    onClick={() => setUserToDelete(user)}
                                                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                     title="Delete User"
                                                 >
@@ -196,6 +217,39 @@ export const UsersPage = () => {
                     onClose={() => setEditingUser(null)} 
                     onSave={handleUpdateUser} 
                 />
+            )}
+
+            {userToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+                        <div className="border-b border-gray-100 px-6 py-5">
+                            <h2 className="text-xl font-bold text-gray-900">Confirm Deletion</h2>
+                            <p className="mt-1 text-sm text-gray-500">Please confirm if you want to permanently delete this user.</p>
+                        </div>
+                        <div className="px-6 py-5 space-y-4">
+                            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                <span className="font-bold">{userToDelete.name}</span>
+                                <span className="text-red-600"> ({userToDelete.email}) will be removed. This action cannot be undone.</span>
+                            </div>
+                            <div className="flex gap-3 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setUserToDelete(null)}
+                                    className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteUser}
+                                    className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 font-bold text-white transition-colors hover:bg-red-700"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

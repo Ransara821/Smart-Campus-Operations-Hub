@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     ArrowRight,
-    Building2,
     CalendarDays,
     CheckCircle2,
     ChevronRight,
@@ -47,7 +46,6 @@ function PulseCard({ icon: Icon, title, value, suffix, accent, detail, badges, p
                     <Icon className="h-5 w-5" />
                 </div>
             </div>
-
             {typeof progress === 'number' && (
                 <div className="mt-6">
                     <div className="h-2.5 overflow-hidden rounded-full bg-violet-100">
@@ -58,7 +56,6 @@ function PulseCard({ icon: Icon, title, value, suffix, accent, detail, badges, p
                     </div>
                 </div>
             )}
-
             {badges?.length > 0 && (
                 <div className="mt-6 flex flex-wrap gap-2">
                     {badges.map((badge) => (
@@ -68,7 +65,6 @@ function PulseCard({ icon: Icon, title, value, suffix, accent, detail, badges, p
                     ))}
                 </div>
             )}
-
             <div className="mt-5 flex items-center justify-between text-xs text-slate-500">
                 <span>{footer}</span>
                 <span className="inline-flex items-center gap-1 font-medium text-violet-500">
@@ -107,8 +103,60 @@ export const LandingPage = () => {
         }
     }, [user, navigate]);
 
-    // Define core features for the landing page grid
-    const features = [
+    const scrollToSection = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const heroStats = [
+        { value: '2,400+', label: 'Campus Users' },
+        { value: '98%', label: 'Uptime' },
+        { value: '4 Modules', label: 'Fully Integrated' },
+        { value: '< 2 min', label: 'Avg Response Time' }
+    ];
+
+    const pulseCards = [
+        {
+            icon: CalendarDays,
+            title: 'Active Bookings',
+            value: '142',
+            suffix: 'today',
+            accent: '#a78bfa',
+            detail: 'Rooms, labs, and equipment reserved',
+            progress: 72,
+            footer: 'Updated just now'
+        },
+        {
+            icon: Ticket,
+            title: 'Open Tickets',
+            value: '28',
+            accent: '#c084fc',
+            detail: 'Maintenance issues in progress',
+            badges: ['Plumbing', 'Electrical', 'HVAC'],
+            footer: 'Technicians assigned'
+        },
+        {
+            icon: Users,
+            title: 'Active Users',
+            value: '1,840',
+            accent: '#8b5cf6',
+            detail: 'Students and staff on platform',
+            progress: 85,
+            footer: 'Across all roles'
+        },
+        {
+            icon: ScanLine,
+            title: 'QR Verifications',
+            value: '96%',
+            suffix: 'success',
+            accent: '#d946ef',
+            detail: 'Access validations today',
+            progress: 96,
+            footer: 'Secure and real-time'
+        }
+    ];
+
+    const modules = [
         {
             icon: CalendarDays,
             title: 'Smart Reservations',
@@ -135,8 +183,7 @@ export const LandingPage = () => {
         }
     ];
 
-    // Define the step-by-sequence for the How It Works section
-    const howItWorks = [
+    const quickFlow = [
         {
             step: '01',
             title: 'Discover resources',
@@ -154,7 +201,15 @@ export const LandingPage = () => {
         }
     ];
 
-      return (
+    const navItems = [
+        { label: 'Overview', target: 'overview', type: 'section' },
+        { label: 'About Us', path: '/about-us', type: 'route' },
+        { label: 'Campus Pulse', target: 'pulse', type: 'section' },
+        { label: 'Modules', target: 'modules', type: 'section' },
+        { label: 'Wayfinding', target: 'wayfinding', type: 'section' }
+    ];
+
+    return (
         <div className="min-h-screen bg-[#fcf8ff] text-slate-900">
             <div className="relative overflow-hidden bg-[linear-gradient(180deg,#fdfaff_0%,#f6efff_36%,#f9f5ff_100%)]">
                 <div className="absolute inset-0 opacity-100" style={{ background: 'radial-gradient(circle at top left, rgba(216,180,254,0.35), transparent 28%), radial-gradient(circle at top right, rgba(196,181,253,0.3), transparent 34%), radial-gradient(circle at 50% 70%, rgba(244,208,255,0.4), transparent 30%)' }} />
@@ -260,7 +315,6 @@ export const LandingPage = () => {
                             Surface the live data that matters most, from resource demand and parking flow to maintenance load and secure access.
                         </p>
                     </div>
-
                     <div className="mt-12 grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
                         {pulseCards.map((card) => (
                             <PulseCard key={card.title} {...card} />
@@ -277,7 +331,6 @@ export const LandingPage = () => {
                         <p className="mt-5 text-lg leading-8 text-slate-500">
                             SmartCampus combines the daily tools your institution already needs into a single, polished digital experience.
                         </p>
-
                         <div className="mt-10 space-y-4">
                             {quickFlow.map((item) => (
                                 <div key={item.step} className="rounded-[26px] border border-violet-100 bg-white/80 p-5 shadow-[0_16px_40px_rgba(139,92,246,0.08)]">
@@ -294,7 +347,6 @@ export const LandingPage = () => {
                             ))}
                         </div>
                     </div>
-
                     <div className="grid gap-6 sm:grid-cols-2">
                         {modules.map((module) => (
                             <FeatureCard key={module.title} {...module} />
@@ -311,7 +363,6 @@ export const LandingPage = () => {
                         <p className="mt-5 text-lg leading-8 text-slate-500">
                             Help students, staff, technicians, and admins locate spaces, trace routes, and move between facilities with smarter operational context.
                         </p>
-
                         <div className="mt-8 space-y-4">
                             {[
                                 { icon: Map, text: 'Find classrooms, labs, halls, and shared facilities in one place.' },
@@ -329,7 +380,6 @@ export const LandingPage = () => {
                                 );
                             })}
                         </div>
-
                         <div className="mt-10 flex flex-col gap-4 sm:flex-row">
                             <button
                                 type="button"
@@ -356,7 +406,6 @@ export const LandingPage = () => {
                             <div className="absolute left-[28%] top-[28%] h-[2px] w-[30%] rotate-[-14deg] bg-gradient-to-r from-transparent via-fuchsia-400/80 to-transparent" />
                             <div className="absolute left-[42%] top-[56%] h-[2px] w-[36%] rotate-[8deg] bg-gradient-to-r from-transparent via-purple-400/80 to-transparent" />
                             <div className="absolute left-[18%] top-[62%] h-[2px] w-[28%] rotate-[-24deg] bg-gradient-to-r from-transparent via-violet-300/70 to-transparent" />
-
                             {[
                                 { name: 'Science Lab', position: 'left-[24%] top-[24%]', color: '#93c5fd' },
                                 { name: 'Library Core', position: 'left-[48%] top-[48%]', color: '#f9a8d4' },
@@ -372,7 +421,6 @@ export const LandingPage = () => {
                                     </div>
                                 </div>
                             ))}
-
                             <div className="absolute bottom-5 left-5 right-5 rounded-[24px] border border-violet-100 bg-white/88 p-4 backdrop-blur-xl">
                                 <div className="grid gap-4 sm:grid-cols-3">
                                     <div>
@@ -402,10 +450,9 @@ export const LandingPage = () => {
                                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-500">Built for smart campuses</p>
                                 <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">Deliver a polished digital experience from first click to daily operations.</h2>
                                 <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-500">
-                                    Redefined for a modern audience, SmartCampus now feels like a premium control center while staying aligned with your current color palette and product vision.
+                                    SmartCampus connects your institution's facilities, people, and processes into one seamless platform built for speed, reliability, and clarity.
                                 </p>
                             </div>
-
                             <div className="grid gap-4">
                                 <button
                                     type="button"
@@ -436,50 +483,50 @@ export const LandingPage = () => {
                                 <GraduationCap className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                                <div className="text-lg font-black text-slate-900">SmartCampus</div>
-                                <div className="text-sm text-violet-500">Operations Hub</div>
+                                <div className="text-lg font-black text-white">SmartCampus</div>
+                                <div className="text-sm text-violet-400">Operations Hub</div>
                             </div>
                         </div>
-                        <p className="mt-5 max-w-md text-sm leading-7 text-slate-500">
+                        <p className="mt-5 max-w-md text-sm leading-7 text-slate-400">
                             A connected platform for reservations, maintenance, secure authentication, QR verification, and campus-wide operational visibility.
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Platform</h3>
-                        <div className="mt-5 space-y-3 text-sm text-slate-500">
-                            <button type="button" onClick={() => scrollToSection('modules')} className="block transition hover:text-violet-600">Smart reservations</button>
-                            <button type="button" onClick={() => scrollToSection('pulse')} className="block transition hover:text-violet-600">Campus pulse</button>
-                            <Link to="/verify-qr" className="block transition hover:text-violet-600">QR verification</Link>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Platform</h3>
+                        <div className="mt-5 space-y-3 text-sm text-slate-400">
+                            <button type="button" onClick={() => scrollToSection('modules')} className="block transition hover:text-violet-400">Smart reservations</button>
+                            <button type="button" onClick={() => scrollToSection('pulse')} className="block transition hover:text-violet-400">Campus pulse</button>
+                            <Link to="/verify-qr" className="block transition hover:text-violet-400">QR verification</Link>
                         </div>
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Support</h3>
-                        <div className="mt-5 space-y-3 text-sm text-slate-500">
-                            <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-violet-500" /> support@smartcampus.edu</div>
-                            <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-violet-500" /> +1 (555) 123-4567</div>
-                            <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-violet-500" /> Campus Operations Center</div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Support</h3>
+                        <div className="mt-5 space-y-3 text-sm text-slate-400">
+                            <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-violet-400" /> support@smartcampus.edu</div>
+                            <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-violet-400" /> +1 (555) 123-4567</div>
+                            <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-violet-400" /> Campus Operations Center</div>
                         </div>
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Built for</h3>
-                        <div className="mt-5 space-y-3 text-sm text-slate-500">
-                            <div className="flex items-center gap-2"><Users className="h-4 w-4 text-violet-500" /> Students & faculty</div>
-                            <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-violet-500" /> Technicians</div>
-                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-violet-500" /> Admin teams</div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">Built for</h3>
+                        <div className="mt-5 space-y-3 text-sm text-slate-400">
+                            <div className="flex items-center gap-2"><Users className="h-4 w-4 text-violet-400" /> Students &amp; faculty</div>
+                            <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-violet-400" /> Technicians</div>
+                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-violet-400" /> Admin teams</div>
                         </div>
                     </div>
                 </div>
 
-                <div className="border-t border-violet-100">
+                <div className="border-t border-white/10">
                     <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between lg:px-8">
                         <p>© 2026 SmartCampus Operations Hub. Intelligent management in motion.</p>
                         <div className="flex flex-wrap items-center gap-5">
-                            <button type="button" onClick={() => scrollToSection('overview')} className="transition hover:text-violet-600">Overview</button>
-                            <button type="button" onClick={() => scrollToSection('wayfinding')} className="transition hover:text-violet-600">Wayfinding</button>
-                            <button type="button" onClick={() => navigate('/login')} className="transition hover:text-violet-600">Get Started</button>
+                            <button type="button" onClick={() => scrollToSection('overview')} className="transition hover:text-violet-400">Overview</button>
+                            <button type="button" onClick={() => scrollToSection('wayfinding')} className="transition hover:text-violet-400">Wayfinding</button>
+                            <button type="button" onClick={() => navigate('/login')} className="transition hover:text-violet-400">Get Started</button>
                         </div>
                     </div>
                 </div>

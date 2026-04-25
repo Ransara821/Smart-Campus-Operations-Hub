@@ -272,7 +272,6 @@ public class DataInitializer implements CommandLineRunner {
                 if (existingAdmin.isPresent()) {
                         User admin = existingAdmin.get();
                         admin.setRole(Role.ADMIN);
-                        admin.setName(DEFAULT_ADMIN_NAME);
                         admin.setPasswordHash(passwordEncoder.encode(DEFAULT_ADMIN_PASSWORD));
                         userRepository.save(admin);
                         System.out.println("Default admin account updated: " + DEFAULT_ADMIN_EMAIL);
