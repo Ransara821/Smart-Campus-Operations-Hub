@@ -107,8 +107,61 @@ export const LandingPage = () => {
         }
     }, [user, navigate]);
 
+    const scrollToSection = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const heroStats = [
+        { value: '2,400+', label: 'Campus Users' },
+        { value: '98%', label: 'Uptime' },
+        { value: '4 Modules', label: 'Fully Integrated' },
+        { value: '< 2 min', label: 'Avg Response Time' }
+    ];
+
+    const pulseCards = [
+        {
+            icon: CalendarDays,
+            title: 'Active Bookings',
+            value: '142',
+            suffix: 'today',
+            accent: '#a78bfa',
+            detail: 'Rooms, labs, and equipment reserved',
+            progress: 72,
+            footer: 'Updated just now'
+        },
+        {
+            icon: Ticket,
+            title: 'Open Tickets',
+            value: '28',
+            accent: '#c084fc',
+            detail: 'Maintenance issues in progress',
+            badges: ['Plumbing', 'Electrical', 'HVAC'],
+            footer: 'Technicians assigned'
+        },
+        {
+            icon: Users,
+            title: 'Active Users',
+            value: '1,840',
+            accent: '#8b5cf6',
+            detail: 'Students and staff on platform',
+            progress: 85,
+            footer: 'Across all roles'
+        },
+        {
+            icon: ScanLine,
+            title: 'QR Verifications',
+            value: '96%',
+            suffix: 'success',
+            accent: '#d946ef',
+            detail: 'Access validations today',
+            progress: 96,
+            footer: 'Secure and real-time'
+        }
+    ];
+
     // Define core features for the landing page grid
-    const features = [
+    const modules = [
         {
             icon: CalendarDays,
             title: 'Smart Reservations',
@@ -136,7 +189,7 @@ export const LandingPage = () => {
     ];
 
     // Define the step-by-sequence for the How It Works section
-    const howItWorks = [
+    const quickFlow = [
         {
             step: '01',
             title: 'Discover resources',
@@ -152,6 +205,14 @@ export const LandingPage = () => {
             title: 'Operate securely',
             description: 'QR verification, role controls, and ticket tracking keep the campus running smoothly.'
         }
+    ];
+
+    const navItems = [
+        { label: 'Overview', target: 'overview', type: 'section' },
+        { label: 'About Us', path: '/about-us', type: 'route' },
+        { label: 'Campus Pulse', target: 'pulse', type: 'section' },
+        { label: 'Modules', target: 'modules', type: 'section' },
+        { label: 'Wayfinding', target: 'wayfinding', type: 'section' }
     ];
 
       return (
