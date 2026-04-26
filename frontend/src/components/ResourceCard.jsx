@@ -119,20 +119,20 @@ export const ResourceCard = ({ resource, onEdit, onDelete }) => {
                 {user?.role === 'ADMIN' && (
                     <>
                         <div className="border-t-2 border-gray-100 my-5"></div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2">
                             <button
                                 onClick={onEdit}
-                                className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-lg font-medium text-xs hover:shadow-lg hover:shadow-blue-700/30 transition-all duration-300 transform hover:scale-105 active:scale-95"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-blue-700 text-blue-700 rounded-xl font-semibold text-sm tracking-widest hover:bg-blue-50 transition-all duration-300 active:scale-95"
                             >
-                                <Edit2 className="w-3 h-3" />
-                                Edit
+                                <Edit2 className="w-4 h-4" />
+                                EDIT
                             </button>
                             <button
                                 onClick={onDelete}
-                                className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-gradient-to-r from-red-700 to-red-800 text-white rounded-lg font-medium text-xs hover:shadow-lg hover:shadow-red-700/30 transition-all duration-300 transform hover:scale-105 active:scale-95"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-xl font-semibold text-sm tracking-widest hover:bg-red-50 transition-all duration-300 active:scale-95"
                             >
-                                <Trash2 className="w-3 h-3" />
-                                Delete
+                                <Trash2 className="w-4 h-4" />
+                                DELETE
                             </button>
                         </div>
                     </>
