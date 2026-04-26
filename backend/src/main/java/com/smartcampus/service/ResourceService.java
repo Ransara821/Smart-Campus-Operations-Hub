@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ResourceService {
@@ -16,11 +17,45 @@ public class ResourceService {
         this.resourceRepository = resourceRepository;
     }
 
-    public List<Resource> getAllResources(String search) {
+    public List<Resource> getAllResources(String search, String type, Integer minCapacity, Integer maxCapacity, String location) {
+        List<Resource> resources = resourceRepository.findAll();
+        
+        // Apply search filter (name search)
         if (search != null && !search.isEmpty()) {
-            return resourceRepository.findByNameContainingIgnoreCase(search);
+            resources = resources.stream()
+                    .filter(r -> r.getName().toLowerCase().contains(search.toLowerCase()) ||
+                               r.getLocation().toLowerCase().contains(search.toLowerCase()))
+                    .collect(Collectors.toList());
         }
-        return resourceRepository.findAll();
+        
+        // Apply type filter
+        if (type != null && !type.isEmpty()) {
+            resources = resources.stream()
+                    .filter(r -> r.getType().equalsIgnoreCase(type))
+                    .collect(Collectors.toList());
+        }
+        
+        // Apply location filter
+        if (location != null && !location.isEmpty()) {
+            resources = resources.stream()
+                    .filter(r -> r.getLocation().toLowerCase().contains(location.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+        
+        // Apply capacity filters
+        if (minCapacity != null) {
+            resources = resources.stream()
+                    .filter(r -> r.getCapacity() >= minCapacity)
+                    .collect(Collectors.toList());
+        }
+        
+        if (maxCapacity != null) {
+            resources = resources.stream()
+                    .filter(r -> r.getCapacity() <= maxCapacity)
+                    .collect(Collectors.toList());
+        }
+        
+        return resources;
     }
 
     public Optional<Resource> getResourceById(String id) {

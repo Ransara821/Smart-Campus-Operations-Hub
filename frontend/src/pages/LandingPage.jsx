@@ -99,7 +99,7 @@ export const LandingPage = () => {
 
     useEffect(() => {
         if (user) {
-            navigate(user.role === 'ADMIN' ? '/dashboard' : '/resources');
+            navigate('/dashboard');
         }
     }, [user, navigate]);
 

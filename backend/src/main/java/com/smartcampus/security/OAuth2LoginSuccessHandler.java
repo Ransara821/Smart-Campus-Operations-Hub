@@ -30,9 +30,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
   private final UserRepository userRepository;
   private final Set<String> adminEmails;
 
-  @Value("${oauth.success-url:http://localhost:5173/select-role}")
-  private String frontendSelectRoleUrl;
-
   @Value("${app.frontend-url:http://localhost:5173}")
   private String frontendBaseUrl;
 
@@ -105,7 +102,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     String role = isNewUser
         ? (isAdminEmail(email) ? "ADMIN" : "USER")
         : userOpt.get().getRole().name();
-    String landingPath = "ADMIN".equals(role) ? "/dashboard" : "/resources";
+    String landingPath = "/dashboard";
     String redirectUrl = frontendBaseUrl + landingPath + "?token=" + token;
 
     log.info("Redirecting {} user {} to: {}", isNewUser ? "new" : "existing",

@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import {
-  Building2, CalendarDays, Ticket, Users, TrendingUp, TrendingDown,
+  CalendarDays, Ticket, Bell, Building2, TrendingUp, TrendingDown,
   CheckCircle2, Clock, AlertCircle, Activity, ArrowRight,
-  ShieldCheck, Zap, RefreshCw, Star, XCircle
+  RefreshCw, Plus, GraduationCap, Wrench, Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,7 +12,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
-// ─── Custom Chart Tooltip ─────────────────────────────────────────────
+// ─── Shared helpers ──────────────────────────────────────────────────
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -27,7 +27,6 @@ function ChartTooltip({ active, payload, label }) {
   );
 }
 
-// ─── Stat Card ───────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, trend, trendUp, color, onClick }) {
   return (
     <button onClick={onClick} className="admin-stat-card" style={{ '--card-accent': color }}>
@@ -49,17 +48,14 @@ function StatCard({ icon: Icon, label, value, sub, trend, trendUp, color, onClic
   );
 }
 
-// ─── Recent Activity Item ─────────────────────────────────────────────
 function ActivityItem({ icon: Icon, color, title, meta, time, status }) {
   const statusMap = {
     APPROVED: { label: 'Approved', cls: 'status-success' },
-    PENDING: { label: 'Pending', cls: 'status-warning' },
-    REJECTED: { label: 'Rejected', cls: 'status-danger' },
-    OPEN: { label: 'Open', cls: 'status-info' },
+    PENDING:  { label: 'Pending',  cls: 'status-warning' },
+    REJECTED: { label: 'Rejected', cls: 'status-danger'  },
+    OPEN:        { label: 'Open',        cls: 'status-info'    },
     IN_PROGRESS: { label: 'In Progress', cls: 'status-warning' },
-    RESOLVED: { label: 'Resolved', cls: 'status-success' },
-    ACTIVE: { label: 'Active', cls: 'status-success' },
-    MAINTENANCE: { label: 'Maintenance', cls: 'status-warning' },
+    RESOLVED:    { label: 'Resolved',    cls: 'status-success' },
   };
   const s = statusMap[status] || { label: status, cls: 'status-info' };
   return (
@@ -79,109 +75,95 @@ function ActivityItem({ icon: Icon, color, title, meta, time, status }) {
   );
 }
 
-// ─── Quick Action Button ──────────────────────────────────────────────
 function QuickAction({ icon: Icon, label, color, onClick }) {
   return (
     <button onClick={onClick} className="quick-action-btn" style={{ '--qa-color': color }}>
-      <div className="qa-icon" style={{ background: `${color}15`, color }}>
-        <Icon size={18} />
-      </div>
+      <div className="qa-icon" style={{ background: `${color}15`, color }}><Icon size={18} /></div>
       <span>{label}</span>
       <ArrowRight size={14} className="qa-arrow" />
     </button>
   );
 }
 
-// ─── Resource Status Badge ────────────────────────────────────────────
-function ResourceRow({ resource }) {
-  const statusColor = {
-    ACTIVE: '#22c55e', MAINTENANCE: '#f59e0b', INACTIVE: '#ef4444'
-  }[resource.status] || '#94a3b8';
-  const typeIcon = { LECTURE_HALL: Building2, LAB: Zap, EQUIPMENT: Star }[resource.type] || Building2;
-  const TypeIcon = typeIcon;
-  return (
-    <div className="resource-row">
-      <div className="resource-row-icon" style={{ background: `${statusColor}15`, color: statusColor }}>
-        <TypeIcon size={14} />
-      </div>
-      <div className="resource-row-info">
-        <span className="resource-row-name">{resource.name}</span>
-        <span className="resource-row-type">{resource.type?.replace('_', ' ')} • {resource.location}</span>
-      </div>
-      <div className="resource-row-right">
-        <span className="resource-row-cap">Cap: {resource.capacity}</span>
-        <span className="resource-status-dot" style={{ background: statusColor }} title={resource.status} />
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Dashboard ───────────────────────────────────────────────────
-export const AdminDashboard = () => {
+// ─── User Dashboard ──────────────────────────────────────────────────
+export const UserDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState({ resources: 0, bookings: 0, tickets: 0, users: 0 });
+  const [stats, setStats]               = useState({ bookings: 0, tickets: 0, notifications: 0, resources: 0 });
   const [recentBookings, setRecentBookings] = useState([]);
-  const [recentTickets, setRecentTickets] = useState([]);
-  const [resources, setResources] = useState([]);
+  const [recentTickets, setRecentTickets]   = useState([]);
+  const [recentNotifs, setRecentNotifs]     = useState([]);
   const [bookingChartData, setBookingChartData] = useState([]);
-  const [ticketChartData, setTicketChartData] = useState([]);
-  const [trendData, setTrendData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [ticketChartData, setTicketChartData]   = useState([]);
+  const [trendData, setTrendData]       = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [lastRefresh, setLastRefresh]   = useState(new Date());
+
+  const isTech = user?.role === 'TECHNICIAN';
 
   const load = async () => {
     setLoading(true);
     try {
-      const [rRes, bRes, tRes, uRes] = await Promise.all([
-        axios.get('/api/resources'),
-        axios.get('/api/bookings'),
-        axios.get('/api/tickets'),
-        axios.get('/api/users').catch(() => ({ data: [] })),
+      const bookingUrl  = isTech ? '/api/bookings' : '/api/bookings/my-bookings';
+      const ticketParam = isTech ? '?context=assigned' : '?context=my-tickets';
+
+      const [bRes, tRes, nRes, rRes] = await Promise.all([
+        axios.get(bookingUrl, { withCredentials: true }).catch(() => ({ data: [] })),
+        axios.get(`/api/tickets${ticketParam}`, { withCredentials: true }).catch(() => ({ data: [] })),
+        axios.get('/api/notifications?unreadOnly=false', { withCredentials: true }).catch(() => ({ data: [] })),
+        axios.get('/api/resources', { withCredentials: true }).catch(() => ({ data: [] })),
       ]);
-      const rd = rRes.data || [], bd = bRes.data || [], td = tRes.data || [], ud = uRes.data || [];
+
+      const bd = bRes.data || [], td = tRes.data || [], nd = nRes.data || [], rd = rRes.data || [];
+      const unread = nd.filter(n => !n.isRead).length;
 
       setStats({
-        resources: rd.length, bookings: bd.length, tickets: td.length, users: ud.length,
-        openTickets: td.filter(t => t.status === 'OPEN').length,
+        bookings:      bd.length,
+        tickets:       td.length,
+        notifications: unread,
+        resources:     rd.filter(r => r.status === 'ACTIVE').length,
         pendingBookings: bd.filter(b => b.status === 'PENDING').length,
-        activeResources: rd.filter(r => r.status === 'ACTIVE').length,
+        approvedBookings: bd.filter(b => b.status === 'APPROVED').length,
+        openTickets: td.filter(t => t.status === 'OPEN').length,
       });
 
+      // Booking status bar data
       const bGroups = { PENDING: 0, APPROVED: 0, REJECTED: 0 };
       bd.forEach(b => { if (bGroups[b.status] !== undefined) bGroups[b.status]++; });
       setBookingChartData([
-        { name: 'Pending', value: bGroups.PENDING, fill: '#f59e0b' },
+        { name: 'Pending',  value: bGroups.PENDING,  fill: '#f59e0b' },
         { name: 'Approved', value: bGroups.APPROVED, fill: '#22c55e' },
         { name: 'Rejected', value: bGroups.REJECTED, fill: '#ef4444' },
       ]);
 
+      // Ticket status donut data
       const tGroups = { OPEN: 0, IN_PROGRESS: 0, RESOLVED: 0 };
       td.forEach(t => { if (tGroups[t.status] !== undefined) tGroups[t.status]++; });
       setTicketChartData([
-        { name: 'Open', value: tGroups.OPEN, fill: '#3b82f6' },
+        { name: 'Open',        value: tGroups.OPEN,        fill: '#3b82f6' },
         { name: 'In Progress', value: tGroups.IN_PROGRESS, fill: '#f59e0b' },
-        { name: 'Resolved', value: tGroups.RESOLVED, fill: '#22c55e' },
+        { name: 'Resolved',    value: tGroups.RESOLVED,    fill: '#22c55e' },
       ]);
 
+      // 7-day area trend (bookings + notifications)
       const trend = Array.from({ length: 7 }, (_, i) => {
         const d = new Date(); d.setDate(d.getDate() - (6 - i));
         const ds = d.toDateString();
         return {
           day: d.toLocaleDateString('en-US', { weekday: 'short' }),
           Bookings: bd.filter(b => b.createdAt && new Date(b.createdAt).toDateString() === ds).length,
-          Tickets: td.filter(t => t.createdAt && new Date(t.createdAt).toDateString() === ds).length,
+          Tickets:  td.filter(t => t.createdAt && new Date(t.createdAt).toDateString() === ds).length,
         };
       });
       setTrendData(trend);
 
       setRecentBookings([...bd].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5));
       setRecentTickets([...td].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5));
-      setResources(rd.slice(0, 6));
+      setRecentNotifs([...nd].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 4));
       setLastRefresh(new Date());
     } catch (err) {
-      console.error('Dashboard load error:', err);
+      console.error('UserDashboard load error:', err);
     } finally {
       setLoading(false);
     }
@@ -191,23 +173,24 @@ export const AdminDashboard = () => {
 
   const fmtTime = (dt) => {
     if (!dt) return '–';
-    const d = new Date(dt), now = new Date(), diff = (now - d) / 1000;
+    const diff = (new Date() - new Date(dt)) / 1000;
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return d.toLocaleDateString();
+    return new Date(dt).toLocaleDateString();
   };
-  const fmtDate = (dt) => dt ? new Date(dt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '–';
+  const fmtDate = (dt) => dt
+    ? new Date(dt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '–';
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const firstName = user?.name?.split(' ')[0] || 'Admin';
+  const firstName = user?.name?.split(' ')[0] || 'there';
   const totalTickets = ticketChartData.reduce((s, d) => s + d.value, 0);
 
-  const systemHealth = [
-    { label: 'Backend API', ok: true }, { label: 'Database', ok: true },
-    { label: 'Auth Service', ok: true }, { label: 'Notifications', ok: true },
-  ];
+  const roleLabel = isTech ? 'Technician Portal' : 'Student Portal';
+  const RoleIcon  = isTech ? Wrench : GraduationCap;
+  const roleColor = isTech ? '#8b5cf6' : '#06b6d4';
 
   if (loading) return (
     <div className="admin-dash-loading"><div className="dash-spinner" /><span>Loading dashboard…</span></div>
@@ -216,11 +199,17 @@ export const AdminDashboard = () => {
   return (
     <div className="admin-dash">
       {/* Hero */}
-      <div className="dash-hero">
+      <div className="dash-hero" style={{ '--hero-accent': roleColor }}>
         <div className="dash-hero-left">
-          <div className="dash-greeting-badge"><ShieldCheck size={13} /> Admin Control Center</div>
-          <h1 className="dash-greeting-title">{greeting}, <span>{firstName}!</span></h1>
-          <p className="dash-greeting-sub">Here's what's happening across SmartCampus today.</p>
+          <div className="dash-greeting-badge" style={{ borderColor: `${roleColor}30`, color: roleColor, background: `${roleColor}10` }}>
+            <RoleIcon size={13} /> {roleLabel}
+          </div>
+          <h1 className="dash-greeting-title">{greeting}, <span style={{ color: roleColor }}>{firstName}!</span></h1>
+          <p className="dash-greeting-sub">
+            {isTech
+              ? "Here's your assigned tickets and workload for today."
+              : "Here's a summary of your bookings, tickets, and campus activity."}
+          </p>
         </div>
         <div className="dash-hero-right">
           <div className="dash-refresh-info"><Activity size={13} /> Last updated {fmtTime(lastRefresh)}</div>
@@ -230,18 +219,26 @@ export const AdminDashboard = () => {
 
       {/* Stats */}
       <div className="admin-stats-grid">
-        <StatCard icon={Building2} label="Total Facilities" value={stats.resources} sub={`${stats.activeResources} active`} color="#06b6d4" trend={12} trendUp onClick={() => navigate('/resources')} />
-        <StatCard icon={CalendarDays} label="Total Bookings" value={stats.bookings} sub={`${stats.pendingBookings} pending`} color="#8b5cf6" trend={8} trendUp onClick={() => navigate('/bookings')} />
-        <StatCard icon={Ticket} label="Support Tickets" value={stats.tickets} sub={`${stats.openTickets} open`} color="#f59e0b" trend={stats.openTickets > 3 ? 15 : 5} trendUp={stats.openTickets <= 3} onClick={() => navigate('/tickets')} />
-        <StatCard icon={Users} label="Total Users" value={stats.users} sub="registered accounts" color="#22c55e" trend={5} trendUp onClick={() => navigate('/users')} />
+        <StatCard icon={CalendarDays} label={isTech ? 'All Bookings' : 'My Bookings'} value={stats.bookings}
+          sub={`${stats.pendingBookings} pending`} color="#8b5cf6" trend={stats.approvedBookings > 0 ? 8 : 0} trendUp
+          onClick={() => navigate('/bookings')} />
+        <StatCard icon={Ticket} label={isTech ? 'Assigned Tickets' : 'My Tickets'} value={stats.tickets}
+          sub={`${stats.openTickets} open`} color="#f59e0b" trend={stats.openTickets > 2 ? 12 : 4} trendUp={stats.openTickets <= 2}
+          onClick={() => navigate('/tickets')} />
+        <StatCard icon={Bell} label="Notifications" value={stats.notifications}
+          sub="unread messages" color="#ef4444" trend={stats.notifications > 0 ? stats.notifications : 0} trendUp={stats.notifications === 0}
+          onClick={() => navigate('/notifications')} />
+        <StatCard icon={Building2} label="Active Facilities" value={stats.resources}
+          sub="available to book" color="#22c55e" trend={5} trendUp
+          onClick={() => navigate('/resources')} />
       </div>
 
-      {/* Charts row */}
+      {/* Charts */}
       <div className="admin-charts-grid">
         {/* Area – 7-day trend */}
         <div className="admin-card admin-chart-wide">
           <div className="admin-card-header">
-            <h2 className="admin-card-title"><Activity size={16} /> 7-Day Activity Trend</h2>
+            <h2 className="admin-card-title"><Activity size={16} /> My 7-Day Activity</h2>
             <div className="chart-legend">
               <span className="legend-dot" style={{ background: '#8b5cf6' }} /> Bookings
               <span className="legend-dot" style={{ background: '#f59e0b', marginLeft: 14 }} /> Tickets
@@ -250,19 +247,21 @@ export const AdminDashboard = () => {
           <ResponsiveContainer width="100%" height={190}>
             <AreaChart data={trendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient id="gbk" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} /><stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                <linearGradient id="ubk" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="gtk" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} /><stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                <linearGradient id="utk" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<ChartTooltip />} />
-              <Area type="monotone" dataKey="Bookings" stroke="#8b5cf6" strokeWidth={2.5} fill="url(#gbk)" dot={false} activeDot={{ r: 4 }} />
-              <Area type="monotone" dataKey="Tickets" stroke="#f59e0b" strokeWidth={2.5} fill="url(#gtk)" dot={false} activeDot={{ r: 4 }} />
+              <Area type="monotone" dataKey="Bookings" stroke="#8b5cf6" strokeWidth={2.5} fill="url(#ubk)" dot={false} activeDot={{ r: 4 }} />
+              <Area type="monotone" dataKey="Tickets"  stroke="#f59e0b" strokeWidth={2.5} fill="url(#utk)" dot={false} activeDot={{ r: 4 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -320,11 +319,12 @@ export const AdminDashboard = () => {
       <div className="admin-card">
         <div className="admin-card-header"><h2 className="admin-card-title"><Zap size={16} /> Quick Actions</h2></div>
         <div className="quick-actions-list quick-actions-grid">
-          <QuickAction icon={Building2} label="Manage Facilities" color="#06b6d4" onClick={() => navigate('/resources')} />
-          <QuickAction icon={CalendarDays} label="Review Bookings" color="#8b5cf6" onClick={() => navigate('/bookings')} />
-          <QuickAction icon={Ticket} label="Open Tickets" color="#f59e0b" onClick={() => navigate('/tickets')} />
-          <QuickAction icon={CheckCircle2} label="Verify QR Code" color="#22c55e" onClick={() => navigate('/verify-qr')} />
-          <QuickAction icon={Users} label="Manage Users" color="#3b82f6" onClick={() => navigate('/users')} />
+          <QuickAction icon={Plus}          label="New Booking"       color="#8b5cf6" onClick={() => navigate('/bookings')} />
+          <QuickAction icon={Ticket}        label="New Ticket"        color="#f59e0b" onClick={() => navigate('/tickets')} />
+          <QuickAction icon={Building2}     label="Browse Facilities" color="#06b6d4" onClick={() => navigate('/resources')} />
+          <QuickAction icon={Bell}          label="Notifications"     color="#ef4444" onClick={() => navigate('/notifications')} />
+          {!isTech && <QuickAction icon={CheckCircle2} label="My Approvals" color="#22c55e" onClick={() => navigate('/bookings')} />}
+          {isTech  && <QuickAction icon={Wrench}       label="My Work Queue" color="#22c55e" onClick={() => navigate('/tickets')} />}
         </div>
       </div>
 
@@ -336,39 +336,56 @@ export const AdminDashboard = () => {
             <button className="card-view-all" onClick={() => navigate('/bookings')}>View all <ArrowRight size={12} /></button>
           </div>
           <div className="activity-list">
-            {recentBookings.length === 0 ? <p className="empty-state">No bookings found.</p>
+            {recentBookings.length === 0
+              ? <p className="empty-state">No bookings yet. <button className="empty-cta" onClick={() => navigate('/bookings')}>Make one →</button></p>
               : recentBookings.map((b, i) => (
-                <ActivityItem key={b.id || i} icon={CalendarDays} color="#8b5cf6"
-                  title={b.resourceName || 'Resource'} meta={`${b.userName || 'User'} · ${fmtDate(b.startTime)}`}
-                  time={fmtTime(b.createdAt)} status={b.status} />
-              ))}
+                  <ActivityItem key={b.id || i} icon={CalendarDays} color="#8b5cf6"
+                    title={b.resourceName || 'Resource'}
+                    meta={fmtDate(b.startTime)}
+                    time={fmtTime(b.createdAt)} status={b.status} />
+                ))}
           </div>
         </div>
+
         <div className="admin-card">
           <div className="admin-card-header">
             <h2 className="admin-card-title"><Ticket size={16} /> Recent Tickets</h2>
             <button className="card-view-all" onClick={() => navigate('/tickets')}>View all <ArrowRight size={12} /></button>
           </div>
           <div className="activity-list">
-            {recentTickets.length === 0 ? <p className="empty-state">No tickets found.</p>
+            {recentTickets.length === 0
+              ? <p className="empty-state">No tickets yet. <button className="empty-cta" onClick={() => navigate('/tickets')}>Submit one →</button></p>
               : recentTickets.map((t, i) => (
-                <ActivityItem key={t.id || i} icon={Ticket} color="#f59e0b"
-                  title={t.title || 'Ticket'} meta={t.creatorName || 'Unknown'}
-                  time={fmtTime(t.createdAt)} status={t.status} />
-              ))}
+                  <ActivityItem key={t.id || i} icon={Ticket} color="#f59e0b"
+                    title={t.title || 'Ticket'}
+                    meta={t.description?.slice(0, 50) || ''}
+                    time={fmtTime(t.createdAt)} status={t.status} />
+                ))}
           </div>
         </div>
       </div>
 
-      {/* Facilities Overview */}
+      {/* Notifications panel */}
       <div className="admin-card">
         <div className="admin-card-header">
-          <h2 className="admin-card-title"><Building2 size={16} /> Facilities Overview</h2>
-          <button className="card-view-all" onClick={() => navigate('/resources')}>Manage all <ArrowRight size={12} /></button>
+          <h2 className="admin-card-title"><Bell size={16} /> Recent Notifications</h2>
+          <button className="card-view-all" onClick={() => navigate('/notifications')}>View all <ArrowRight size={12} /></button>
         </div>
-        <div className="resources-overview-grid">
-          {resources.length === 0 ? <p className="empty-state">No resources found.</p>
-            : resources.map((r, i) => <ResourceRow key={r.id || i} resource={r} />)}
+        <div className="activity-list">
+          {recentNotifs.length === 0
+            ? <p className="empty-state">No notifications yet.</p>
+            : recentNotifs.map((n, i) => (
+                <div key={n.id || i} className={`notif-row ${n.isRead ? '' : 'notif-unread'}`}>
+                  <div className="notif-dot-col">
+                    {!n.isRead && <span className="notif-unread-dot" />}
+                  </div>
+                  <div className="activity-body">
+                    <span className="activity-title">{n.title || 'Notification'}</span>
+                    <span className="activity-meta">{n.message || ''}</span>
+                  </div>
+                  <span className="activity-time">{fmtTime(n.createdAt)}</span>
+                </div>
+              ))}
         </div>
       </div>
     </div>
