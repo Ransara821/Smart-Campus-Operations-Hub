@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { ResourceCard } from '../components/ResourceCard';
 import { ResourceForm } from '../components/ResourceForm';
-import { Plus, Search, X, Filter } from 'lucide-react';
+import { Plus, Search, X, Filter, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const ResourcesPage = () => {
@@ -18,6 +18,7 @@ export const ResourcesPage = () => {
     });
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingResource, setEditingResource] = useState(null);
+    const [deleteConfirm, setDeleteConfirm] = useState(null); // holds resourceId to delete
 
     const resourceTypes = [
         { value: 'LECTURE_HALL', label: 'Lecture Hall' },
@@ -88,10 +89,14 @@ export const ResourcesPage = () => {
         setIsFormOpen(true);
     };
 
-    const handleDelete = async (resourceId) => {
-        if (!window.confirm('Are you sure you want to delete this resource?')) return;
+    const handleDelete = (resourceId) => {
+        setDeleteConfirm(resourceId);
+    };
+
+    const confirmDelete = async () => {
         try {
-            await axios.delete(`/api/resources/${resourceId}`, { withCredentials: true });
+            await axios.delete(`/api/resources/${deleteConfirm}`, { withCredentials: true });
+            setDeleteConfirm(null);
             fetchResources();
         } catch (error) {
             alert('Failed to delete resource');
@@ -258,6 +263,60 @@ export const ResourcesPage = () => {
 
             {isFormOpen && (
                 <ResourceForm resource={editingResource} onClose={handleFormClose} />
+            )}
+
+            {/* ── Delete Confirmation Modal ── */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div
+                        className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
+                        style={{ animation: 'popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
+                    >
+                        {/* Red header strip */}
+                        <div className="relative bg-gradient-to-br from-red-500 to-rose-600 px-6 pt-8 pb-10 flex flex-col items-center">
+                            <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-3 shadow-lg">
+                                <Trash2 className="w-8 h-8 text-white" />
+                            </div>
+                            <h2 className="text-white text-xl font-bold">Delete Resource</h2>
+                        </div>
+
+                        {/* Body */}
+                        <div className="px-6 pt-6 pb-3 text-center -mt-5">
+                            <div className="inline-flex items-center gap-1.5 bg-red-50 text-red-500 text-xs font-semibold px-3 py-1 rounded-full mb-4">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                This action cannot be undone
+                            </div>
+                            <p className="text-gray-600 text-sm leading-relaxed">
+                                Are you sure you want to permanently delete this resource? All associated data will be removed from the system.
+                            </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-3 px-6 pb-6 pt-4">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-red-500/30 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <style>{`
+                        @keyframes popIn {
+                            from { opacity: 0; transform: scale(0.85); }
+                            to   { opacity: 1; transform: scale(1); }
+                        }
+                    `}</style>
+                </div>
             )}
         </div>
     );
