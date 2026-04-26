@@ -24,52 +24,79 @@ import {
 import './LandingPage.css';
 import heroBg from '../assets/hero-bg.png';
 
-function PulseCard({ icon: Icon, title, value, suffix, accent, detail, badges, progress, footer }) {
+function PulseCard({ icon: Icon, title, value, suffix, accent, detail, badges, progress, footer, gradient }) {
     return (
         <div
-            className="rounded-[28px] border bg-white/85 p-6 shadow-[0_20px_60px_rgba(168,85,247,0.12)] backdrop-blur-xl"
-            style={{ borderColor: `${accent}22`, boxShadow: `0 20px 60px ${accent}14` }}
+            className="group relative overflow-hidden rounded-[28px] border bg-white transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+            style={{ borderColor: `${accent}28`, boxShadow: `0 12px 40px ${accent}16` }}
         >
-            <div className="flex items-start justify-between gap-4">
+            {/* Gradient header strip */}
+            <div
+                className={`relative flex items-center justify-between px-5 pt-5 pb-4`}
+            >
+                {/* Subtle bg glow */}
+                <div className="pointer-events-none absolute inset-0 opacity-[0.07]" style={{ background: `radial-gradient(ellipse at top right, ${accent}, transparent 70%)` }} />
+
                 <div>
-                    <p className="text-sm font-semibold text-slate-600">{title}</p>
-                    <div className="mt-4 flex items-end gap-2">
-                        <span className="text-4xl font-black tracking-tight text-slate-900">{value}</span>
-                        {suffix && <span className="pb-1 text-sm font-semibold text-slate-500">{suffix}</span>}
-                    </div>
-                    <p className="mt-2 text-sm text-slate-500">{detail}</p>
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest"
+                        style={{ background: `${accent}15`, color: accent }}>
+                        <span className="relative flex h-1.5 w-1.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: accent }} />
+                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: accent }} />
+                        </span>
+                        Live
+                    </span>
+                    <p className="mt-2 text-sm font-bold text-slate-700">{title}</p>
                 </div>
+
                 <div
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl border"
-                    style={{ backgroundColor: `${accent}18`, borderColor: `${accent}30`, color: accent }}
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} shadow-lg transition-transform duration-300 group-hover:scale-110`}
                 >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-5 w-5 text-white" />
                 </div>
             </div>
-            {typeof progress === 'number' && (
-                <div className="mt-6">
-                    <div className="h-2.5 overflow-hidden rounded-full bg-violet-100">
-                        <div
-                            className="h-full rounded-full"
-                            style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${accent}, #ddd6fe)` }}
-                        />
+
+            {/* Body */}
+            <div className="px-5 pb-5">
+                <div className="flex items-end gap-2">
+                    <span
+                        className={`bg-gradient-to-r ${gradient} bg-clip-text text-4xl font-black tracking-tight text-transparent`}
+                    >{value}</span>
+                    {suffix && <span className="pb-1 text-sm font-semibold text-slate-400">{suffix}</span>}
+                </div>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{detail}</p>
+
+                {typeof progress === 'number' && (
+                    <div className="mt-4">
+                        <div className="flex justify-between mb-1">
+                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Progress</span>
+                            <span className="text-[10px] font-bold" style={{ color: accent }}>{progress}%</span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full" style={{ background: `${accent}15` }}>
+                            <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${accent}cc, ${accent})` }}
+                            />
+                        </div>
                     </div>
+                )}
+
+                {badges?.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                        {badges.map((badge) => (
+                            <span key={badge}
+                                className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                                style={{ background: `${accent}12`, color: accent, border: `1px solid ${accent}30` }}>
+                                {badge}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+                    <CheckCircle2 className="h-3 w-3" style={{ color: accent }} />
+                    {footer}
                 </div>
-            )}
-            {badges?.length > 0 && (
-                <div className="mt-6 flex flex-wrap gap-2">
-                    {badges.map((badge) => (
-                        <span key={badge} className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-medium text-slate-600">
-                            {badge}
-                        </span>
-                    ))}
-                </div>
-            )}
-            <div className="mt-5 flex items-center justify-between text-xs text-slate-500">
-                <span>{footer}</span>
-                <span className="inline-flex items-center gap-1 font-medium text-violet-500">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Live
-                </span>
             </div>
         </div>
     );
@@ -121,7 +148,8 @@ export const LandingPage = () => {
             title: 'Active Bookings',
             value: '142',
             suffix: 'today',
-            accent: '#a78bfa',
+            accent: '#8b5cf6',
+            gradient: 'from-violet-500 to-purple-600',
             detail: 'Rooms, labs, and equipment reserved',
             progress: 72,
             footer: 'Updated just now'
@@ -130,7 +158,8 @@ export const LandingPage = () => {
             icon: Ticket,
             title: 'Open Tickets',
             value: '28',
-            accent: '#c084fc',
+            accent: '#f59e0b',
+            gradient: 'from-amber-400 to-orange-500',
             detail: 'Maintenance issues in progress',
             badges: ['Plumbing', 'Electrical', 'HVAC'],
             footer: 'Technicians assigned'
@@ -139,7 +168,8 @@ export const LandingPage = () => {
             icon: Users,
             title: 'Active Users',
             value: '1,840',
-            accent: '#8b5cf6',
+            accent: '#06b6d4',
+            gradient: 'from-cyan-500 to-teal-500',
             detail: 'Students and staff on platform',
             progress: 85,
             footer: 'Across all roles'
@@ -150,6 +180,7 @@ export const LandingPage = () => {
             value: '96%',
             suffix: 'success',
             accent: '#d946ef',
+            gradient: 'from-fuchsia-500 to-pink-500',
             detail: 'Access validations today',
             progress: 96,
             footer: 'Secure and real-time'
