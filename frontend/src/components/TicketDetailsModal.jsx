@@ -158,7 +158,11 @@ export const TicketDetailsModal = ({ ticket, onClose }) => {
         } catch (err) {
             console.error('Ticket creation error:', err);
             console.error('Error response:', err.response);
-            const errorMsg = err.response?.data?.message || err.response?.data || 'Failed to create ticket. Please try again.';
+            const statusCode = err.response?.status;
+            const backendMessage = err.response?.data?.message || err.response?.data;
+            const errorMsg = statusCode === 413
+                ? 'Upload too large. Please keep each image under 5MB and total upload under 20MB.'
+                : backendMessage || 'Failed to create ticket. Please try again.';
             alert('❌ ' + (typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg)));
         }
     };
