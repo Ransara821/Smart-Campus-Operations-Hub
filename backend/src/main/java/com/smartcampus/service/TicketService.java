@@ -57,7 +57,10 @@ public class TicketService {
     }
 
     public List<Ticket> getTechnicianTickets(String technicianId) {
-        return ticketRepository.findByAssignedTechnicianIdOrderByCreatedAtDesc(technicianId);
+        System.out.println("🗄️ Querying DB for tickets assigned to: " + technicianId);
+        List<Ticket> tickets = ticketRepository.findByAssignedTechnicianIdOrderByCreatedAtDesc(technicianId);
+        System.out.println("📊 Found " + tickets.size() + " tickets");
+        return tickets;
     }
 
     public Ticket createTicket(Ticket ticket) {
@@ -169,10 +172,12 @@ public class TicketService {
 
     public Optional<Ticket> assignTechnician(String id, String technicianId) {
         return ticketRepository.findById(id).map(existing -> {
+            System.out.println("📝 Saving ticket " + id + " with assignedTechnicianId: " + technicianId);
             existing.setAssignedTechnicianId(technicianId);
             
             // Set technician name
             userRepository.findById(technicianId).ifPresent(tech -> {
+                System.out.println("👤 Found Technician Name: " + tech.getName());
                 existing.setAssignedTechnicianName(tech.getName());
             });
             

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { X, Send, Paperclip, Edit2, Trash2 } from 'lucide-react';
+import { X, Send, Paperclip, Edit2, Trash2, RefreshCw, AlertCircle, Wrench, CheckCircle2, XCircle, Clock, MapPin, User, ChevronRight } from 'lucide-react';
 
 export const TicketDetailsModal = ({ ticket, onClose }) => {
     const { user } = useAuth();
@@ -35,6 +35,11 @@ export const TicketDetailsModal = ({ ticket, onClose }) => {
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [editingCommentText, setEditingCommentText] = useState('');
 
+    // Technician assignment state
+    const [technicians, setTechnicians] = useState([]);
+    const [loadingTechs, setLoadingTechs] = useState(false);
+    const [errorTechs, setErrorTechs] = useState(null);
+
     useEffect(() => {
         if (!ticket?.isNew && ticket?.id && !isEditingTicket) {
             fetchComments();
@@ -65,6 +70,30 @@ export const TicketDetailsModal = ({ ticket, onClose }) => {
             }
         }
     }, [ticket, isEditingTicket]);
+
+    // Separate effect for fetching technicians to ensure it runs correctly
+    const fetchAllUsers = async () => {
+        if (user?.role === 'ADMIN' && !ticket?.isNew) {
+            setLoadingTechs(true);
+            setErrorTechs(null);
+            try {
+                const res = await axios.get('/api/users/technicians', { withCredentials: true });
+                console.log('Fetched technicians for assignment:', res.data);
+                setTechnicians(res.data);
+            } catch (err) {
+                console.error('Failed to fetch users:', err);
+                setErrorTechs('Failed to load users');
+            } finally {
+                setLoadingTechs(false);
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (!isEditingTicket) {
+            fetchAllUsers();
+        }
+    }, [user?.role, ticket?.id, isEditingTicket]);
 
     const fetchComments = async () => {
         try {
@@ -462,14 +491,34 @@ export const TicketDetailsModal = ({ ticket, onClose }) => {
                                 </select>
                             )}
                             {user.role === 'ADMIN' && (
-                                <select
-                                    onChange={(e) => handleAssign(e.target.value)}
-                                    value={ticket.assignedTechnicianId || ''}
-                                    className="text-sm border border-purple-200 p-1.5 rounded-xl font-bold bg-purple-50 text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm cursor-pointer hover:bg-purple-100"
-                                >
-                                    <option value="" disabled className="bg-white">Assign Tech...</option>
-                                    <option value="dev-tech-789" className="bg-white">Campus Technician (dev-tech-789)</option>
-                                </select>
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        onChange={(e) => handleAssign(e.target.value)}
+                                        value={ticket.assignedTechnicianId || ''}
+                                        className="text-sm border border-purple-200 p-1.5 rounded-xl font-bold bg-purple-50 text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm cursor-pointer hover:bg-purple-100 min-w-[180px]"
+                                    >
+                                        <option value="" disabled className="bg-white">
+                                            {loadingTechs ? 'Loading Users...' : errorTechs ? errorTechs : 'Assign Tech...'}
+                                        </option>
+                                        
+                                        {/* Fallback dev technician */}
+                                        <option value="dev-tech-789" className="bg-white">Campus Technician (dev-tech-789)</option>
+                                        
+                                        {/* Dynamic users from DB */}
+                                        {technicians.filter(t => t.id !== 'dev-tech-789').map(tech => (
+                                            <option key={tech.id} value={tech.id} className="bg-white">
+                                                {tech.name} [{tech.role}]
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); fetchAllUsers(); }}
+                                        className="p-1.5 hover:bg-purple-100 rounded-lg text-purple-600 transition-colors"
+                                        title="Refresh User List"
+                                    >
+                                        <RefreshCw className={`w-4 h-4 ${loadingTechs ? 'animate-spin' : ''}`} />
+                                    </button>
+                                </div>
                             )}
                             {user.id === ticket.creatorId && status === 'OPEN' && (
                                 <>
