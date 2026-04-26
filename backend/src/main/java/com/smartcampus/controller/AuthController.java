@@ -5,11 +5,10 @@ import com.smartcampus.model.User;
 import com.smartcampus.repository.UserRepository;
 import com.smartcampus.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -26,20 +25,28 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final Set<String> adminEmails;
+    private final Set<String> otpBypassEmails;
 
     public AuthController(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtUtil jwtUtil,
-            @Value("${app.admin.emails:admin@smartcampus.edu}") String adminEmailsConfig) {
+            @Value("${app.admin.emails:admin@smartcampus.edu}") String adminEmailsConfig,
+            @Value("${app.otp.bypass.emails:user@gmail.com,technician@gmail.com}") String otpBypassEmailsConfig) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.adminEmails = new HashSet<>();
+        this.otpBypassEmails = new HashSet<>();
         Arrays.stream(adminEmailsConfig.split(","))
                 .map(String::trim)
                 .filter(email -> !email.isBlank())
                 .map(String::toLowerCase)
                 .forEach(this.adminEmails::add);
+        Arrays.stream(otpBypassEmailsConfig.split(","))
+                .map(String::trim)
+                .filter(email -> !email.isBlank())
+                .map(String::toLowerCase)
+                .forEach(this.otpBypassEmails::add);
     }
 
     @GetMapping("/me")
@@ -106,12 +113,24 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("message", "Invalid email or password"));
         }
 
-        // Enforce admin access only to configured admin emails.
+        // Enforce admin access only to configured admin emails
         if (user.getRole() == Role.ADMIN && !isAdminEmail(normalizedEmail)) {
             user.setRole(Role.USER);
             user = userRepository.save(user);
         }
 
+        if (user.getRole() == Role.ADMIN && isAdminEmail(normalizedEmail)) {
+            String token = jwtUtil.generateToken(user);
+            return ResponseEntity.ok(AuthResponse.from(user, token));
+        }
+
+        // Allow selected support accounts to log in directly without OTP.
+        if (isOtpBypassEmail(normalizedEmail)) {
+            String token = jwtUtil.generateToken(user);
+            return ResponseEntity.ok(AuthResponse.from(user, token));
+        }
+
+        // This branch currently uses direct sign-in flow.
         String token = jwtUtil.generateToken(user);
         return ResponseEntity.ok(AuthResponse.from(user, token));
     }
@@ -191,6 +210,10 @@ public class AuthController {
 
     private boolean isAdminEmail(String email) {
         return adminEmails.contains(normalizeEmail(email));
+    }
+
+    private boolean isOtpBypassEmail(String email) {
+        return otpBypassEmails.contains(normalizeEmail(email));
     }
 
     private String normalizeEmail(String email) {
