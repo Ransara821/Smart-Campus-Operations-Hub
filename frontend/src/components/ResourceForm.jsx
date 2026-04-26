@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { X, CheckCircle2, Building2, FlaskConical, Wrench, Users, MapPin, FileText, ImageIcon, Sparkles } from 'lucide-react';
 
@@ -27,8 +27,12 @@ export const ResourceForm = ({ resource, onClose }) => {
         imageUrl:    resource?.imageUrl    || ''
     });
 
-    const [loading, setLoading]     = useState(false);
-    const [showToast, setShowToast] = useState(false);
+    const [loading, setLoading]       = useState(false);
+    const [showToast, setShowToast]   = useState(false);
+    const [urlImgError, setUrlImgError] = useState(false);
+
+    // Reset URL error whenever the imageUrl changes
+    useEffect(() => { setUrlImgError(false); }, [formData.imageUrl]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -249,14 +253,37 @@ export const ResourceForm = ({ resource, onClose }) => {
                                 <ImageIcon className="w-3.5 h-3.5" /> Resource Image
                             </label>
 
-                            {formData.imageUrl && (
+                            {/* Image preview */}
+                            {formData.imageUrl && !formData.imageUrl.startsWith('data:') && (
+                                <div className={`relative mb-3 rounded-2xl overflow-hidden border h-40 ${urlImgError ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
+                                    {urlImgError ? (
+                                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                            <ImageIcon className="w-8 h-8 text-red-300" />
+                                            <p className="text-xs font-semibold text-red-400">Cannot load image</p>
+                                            <p className="text-[11px] text-red-300 text-center px-4">Make sure the URL is a direct link to an image file<br/>(ending in .jpg, .png, .webp, etc.)</p>
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={formData.imageUrl}
+                                            alt="Preview"
+                                            className="w-full h-full object-cover"
+                                            referrerPolicy="no-referrer"
+                                            onError={() => setUrlImgError(true)}
+                                        />
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                                        className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            )}
+
+                            {formData.imageUrl.startsWith('data:') && (
                                 <div className="relative mb-3 rounded-2xl overflow-hidden border border-gray-200 h-40 bg-gray-50">
-                                    <img
-                                        src={formData.imageUrl}
-                                        alt="Preview"
-                                        className="w-full h-full object-cover"
-                                        onError={e => { e.target.style.display = 'none'; }}
-                                    />
+                                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                                     <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
@@ -280,16 +307,21 @@ export const ResourceForm = ({ resource, onClose }) => {
 
                             <div className="mt-3 flex items-center gap-3">
                                 <div className="flex-1 h-px bg-gray-200" />
-                                <span className="text-xs text-gray-400 whitespace-nowrap">or paste URL</span>
+                                <span className="text-xs text-gray-400 whitespace-nowrap">or paste a direct image URL</span>
                                 <div className="flex-1 h-px bg-gray-200" />
                             </div>
                             <input
-                                type="url"
+                                type="text"
                                 value={formData.imageUrl.startsWith('data:') ? '' : formData.imageUrl}
                                 onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                                className={inputBase + ' mt-2'}
-                                placeholder="https://images.unsplash.com/..."
+                                className={`${inputBase} mt-2 ${urlImgError ? 'border-red-300 focus:border-red-400 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.12)]' : ''}`}
+                                placeholder="https://example.com/image.jpg"
                             />
+                            {urlImgError && (
+                                <p className="mt-1.5 text-[11px] text-red-400 flex items-center gap-1">
+                                    <span>⚠</span> URL must point directly to an image file, not a webpage.
+                                </p>
+                            )}
                         </div>
                     </div>
 

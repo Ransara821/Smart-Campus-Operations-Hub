@@ -1,8 +1,15 @@
+import { useState, useEffect } from 'react';
 import { Edit2, Users, MapPin, Trash2, Check, AlertCircle, Power } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const ResourceCard = ({ resource, onEdit, onDelete }) => {
     const { user } = useAuth();
+    const [imgError, setImgError] = useState(false);
+
+    // Reset error state whenever the URL changes so the new URL gets a fresh attempt
+    useEffect(() => {
+        setImgError(false);
+    }, [resource.imageUrl]);
 
     const getStatusConfig = (status) => {
         switch (status) {
@@ -48,12 +55,17 @@ export const ResourceCard = ({ resource, onEdit, onDelete }) => {
         <div className={`group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 border-2 ${statusConfig.border} transform hover:-translate-y-2`}>
             {/* Image Container with Gradient Overlay */}
             <div className="relative h-56 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
-                {resource.imageUrl ? (
+                {resource.imageUrl && !imgError ? (
                     <>
-                        <img 
-                            src={resource.imageUrl} 
-                            alt={resource.name} 
+                        <img
+                            src={resource.imageUrl}
+                            alt={resource.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            referrerPolicy="no-referrer"
+                            onError={() => {
+                                console.warn('Image failed to load:', resource.imageUrl);
+                                setImgError(true);
+                            }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </>
