@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { ResourceCard } from '../components/ResourceCard';
 import { ResourceForm } from '../components/ResourceForm';
-import { Plus, Search, X, Filter, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, X, Filter, Trash2, AlertTriangle, CheckCircle2, Building2, Users, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const ResourcesPage = () => {
@@ -171,74 +171,103 @@ export const ResourcesPage = () => {
 
                 {/* Advanced Filters Panel */}
                 {showFilters && (
-                    <div className="mb-8 p-6 bg-white border-2 border-gray-200 rounded-xl shadow-sm">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Filter Resources</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {/* Resource Type Filter */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Resource Type
-                                </label>
-                                <select
-                                    name="type"
-                                    value={filters.type}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700"
-                                >
-                                    <option value="">All Types</option>
-                                    {resourceTypes.map(type => (
-                                        <option key={type.value} value={type.value}>{type.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                    <div className="mb-8 overflow-hidden rounded-2xl border border-gray-100 shadow-lg"
+                        style={{ animation: 'slideDown 0.3s ease forwards' }}>
 
-                            {/* Min Capacity Filter */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Min Capacity
-                                </label>
-                                <input
-                                    type="number"
-                                    name="minCapacity"
-                                    placeholder="From"
-                                    value={filters.minCapacity}
-                                    onChange={handleFilterChange}
-                                    min="0"
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400"
-                                />
+                        {/* Panel header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Filter className="w-4 h-4 text-white/80" />
+                                <span className="text-white font-bold tracking-wide text-sm uppercase">Filter Resources</span>
                             </div>
+                            {hasActiveFilters && (
+                                <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+                                    Active
+                                </span>
+                            )}
+                        </div>
 
-                            {/* Max Capacity Filter */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Max Capacity
-                                </label>
-                                <input
-                                    type="number"
-                                    name="maxCapacity"
-                                    placeholder="To"
-                                    value={filters.maxCapacity}
-                                    onChange={handleFilterChange}
-                                    min="0"
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400"
-                                />
-                            </div>
+                        <div className="bg-white px-6 py-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-                            {/* Location Filter */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Location
-                                </label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    placeholder="Search location..."
-                                    value={filters.location}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400"
-                                />
+                                {/* Resource Type */}
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                                        <Building2 className="w-3 h-3" /> Type
+                                    </label>
+                                    <select
+                                        name="type"
+                                        value={filters.type}
+                                        onChange={handleFilterChange}
+                                        className="w-full px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 outline-none focus:border-blue-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] transition-all appearance-none cursor-pointer"
+                                    >
+                                        <option value="">All Types</option>
+                                        {resourceTypes.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Capacity range */}
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                                        <Users className="w-3 h-3" /> Capacity Range
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">MIN</span>
+                                            <input
+                                                type="number"
+                                                name="minCapacity"
+                                                placeholder="0"
+                                                value={filters.minCapacity}
+                                                onChange={handleFilterChange}
+                                                min="0"
+                                                className="w-full pl-12 pr-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 outline-none focus:border-blue-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] transition-all placeholder-gray-300"
+                                            />
+                                        </div>
+                                        <div className="relative flex-1">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">MAX</span>
+                                            <input
+                                                type="number"
+                                                name="maxCapacity"
+                                                placeholder="∞"
+                                                value={filters.maxCapacity}
+                                                onChange={handleFilterChange}
+                                                min="0"
+                                                className="w-full pl-12 pr-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 outline-none focus:border-blue-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] transition-all placeholder-gray-300"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Location */}
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                                        <MapPin className="w-3 h-3" /> Location
+                                    </label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                                        <input
+                                            type="text"
+                                            name="location"
+                                            placeholder="Search location…"
+                                            value={filters.location}
+                                            onChange={handleFilterChange}
+                                            className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 outline-none focus:border-blue-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] transition-all placeholder-gray-300"
+                                        />
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
+
+                        <style>{`
+                            @keyframes slideDown {
+                                from { opacity: 0; transform: translateY(-10px); }
+                                to   { opacity: 1; transform: translateY(0); }
+                            }
+                        `}</style>
                     </div>
                 )}
 
