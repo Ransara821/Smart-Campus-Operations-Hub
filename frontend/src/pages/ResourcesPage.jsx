@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { ResourceCard } from '../components/ResourceCard';
 import { ResourceForm } from '../components/ResourceForm';
-import { Plus, Search, X, Filter, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, X, Filter, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const ResourcesPage = () => {
@@ -18,7 +18,8 @@ export const ResourcesPage = () => {
     });
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingResource, setEditingResource] = useState(null);
-    const [deleteConfirm, setDeleteConfirm] = useState(null); // holds resourceId to delete
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [showDeleteToast, setShowDeleteToast] = useState(false);
 
     const resourceTypes = [
         { value: 'LECTURE_HALL', label: 'Lecture Hall' },
@@ -97,6 +98,8 @@ export const ResourcesPage = () => {
         try {
             await axios.delete(`/api/resources/${deleteConfirm}`, { withCredentials: true });
             setDeleteConfirm(null);
+            setShowDeleteToast(true);
+            setTimeout(() => setShowDeleteToast(false), 2500);
             fetchResources();
         } catch (error) {
             alert('Failed to delete resource');
@@ -265,6 +268,29 @@ export const ResourcesPage = () => {
                 <ResourceForm resource={editingResource} onClose={handleFormClose} />
             )}
 
+            {/* ── Delete Success Toast ── */}
+            {showDeleteToast && (
+                <div className="fixed top-6 left-0 right-0 z-[9999] flex justify-center pointer-events-none">
+                    <div style={{ minWidth: '320px', animation: 'slideDown 0.4s ease forwards' }}>
+                        <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white border border-red-100"
+                            style={{ boxShadow: '0 8px 32px 0 rgba(239,68,68,0.18), 0 2px 8px 0 rgba(0,0,0,0.08)' }}>
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center shadow-lg">
+                                <CheckCircle2 className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-bold text-gray-800 text-base leading-tight">Resource Deleted!</p>
+                                <p className="text-sm text-gray-500 mt-0.5">The resource has been permanently removed.</p>
+                            </div>
+                            <div className="w-1.5 h-10 rounded-full bg-gradient-to-b from-red-400 to-rose-500 ml-1" />
+                        </div>
+                        <div className="mt-1.5 h-1 rounded-full bg-red-100 overflow-hidden mx-2">
+                            <div className="h-full bg-gradient-to-r from-red-400 to-rose-500 rounded-full"
+                                style={{ animation: 'shrink 2.5s linear forwards' }} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── Delete Confirmation Modal ── */}
             {deleteConfirm && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -314,6 +340,14 @@ export const ResourcesPage = () => {
                         @keyframes popIn {
                             from { opacity: 0; transform: scale(0.85); }
                             to   { opacity: 1; transform: scale(1); }
+                        }
+                        @keyframes slideDown {
+                            from { opacity: 0; transform: translateY(-24px); }
+                            to   { opacity: 1; transform: translateY(0); }
+                        }
+                        @keyframes shrink {
+                            from { width: 100%; }
+                            to   { width: 0%; }
                         }
                     `}</style>
                 </div>
