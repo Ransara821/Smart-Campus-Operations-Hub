@@ -31,6 +31,7 @@ public class AuthController {
     private final PendingSignupStore pendingSignupStore;
     private final EmailService emailService;
     private final Set<String> adminEmails;
+    private final Set<String> otpBypassEmails;
 
     public AuthController(UserRepository userRepository,
             PasswordEncoder passwordEncoder,
@@ -38,7 +39,8 @@ public class AuthController {
             OtpStore otpStore,
             PendingSignupStore pendingSignupStore,
             EmailService emailService,
-            @Value("${app.admin.emails:admin@smartcampus.edu}") String adminEmailsConfig) {
+            @Value("${app.admin.emails:admin@smartcampus.edu}") String adminEmailsConfig,
+            @Value("${app.otp.bypass.emails:user@gmail.com,technician@gmail.com}") String otpBypassEmailsConfig) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -46,11 +48,17 @@ public class AuthController {
         this.pendingSignupStore = pendingSignupStore;
         this.emailService = emailService;
         this.adminEmails = new HashSet<>();
+        this.otpBypassEmails = new HashSet<>();
         Arrays.stream(adminEmailsConfig.split(","))
                 .map(String::trim)
                 .filter(email -> !email.isBlank())
                 .map(String::toLowerCase)
                 .forEach(this.adminEmails::add);
+        Arrays.stream(otpBypassEmailsConfig.split(","))
+                .map(String::trim)
+                .filter(email -> !email.isBlank())
+                .map(String::toLowerCase)
+                .forEach(this.otpBypassEmails::add);
     }
 
     // ─── GET /api/auth/me ─────────────────────────────────────────────────────
@@ -175,6 +183,13 @@ public class AuthController {
         }
 
         if (user.getRole() == Role.ADMIN && isAdminEmail(normalizedEmail)) {
+            otpStore.clearOtp(normalizedEmail);
+            String token = jwtUtil.generateToken(user);
+            return ResponseEntity.ok(AuthResponse.from(user, token));
+        }
+
+        // Allow configured support users to sign in directly without OTP.
+        if (isOtpBypassEmail(normalizedEmail)) {
             otpStore.clearOtp(normalizedEmail);
             String token = jwtUtil.generateToken(user);
             return ResponseEntity.ok(AuthResponse.from(user, token));
@@ -345,6 +360,10 @@ public class AuthController {
 
     private boolean isAdminEmail(String email) {
         return adminEmails.contains(normalizeEmail(email));
+    }
+
+    private boolean isOtpBypassEmail(String email) {
+        return otpBypassEmails.contains(normalizeEmail(email));
     }
 
     private String normalizeEmail(String email) {
