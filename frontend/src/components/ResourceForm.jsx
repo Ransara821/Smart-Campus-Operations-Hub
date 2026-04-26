@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from '../api/axios';
-import { X } from 'lucide-react';
+import { X, CheckCircle2 } from 'lucide-react';
 
 export const ResourceForm = ({ resource, onClose }) => {
     const [formData, setFormData] = useState({
@@ -14,6 +14,7 @@ export const ResourceForm = ({ resource, onClose }) => {
     });
 
     const [loading, setLoading] = useState(false);
+    const [showToast, setShowToast] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -43,9 +44,12 @@ export const ResourceForm = ({ resource, onClose }) => {
                 response = await axios.post(`/api/resources`, payload, { withCredentials: true });
             }
             console.log('Success! Response:', response.data);
-            alert('Resource saved successfully!');
-            onClose();
-            window.location.reload();
+            setShowToast(true);
+            setTimeout(() => {
+                setShowToast(false);
+                onClose();
+                window.location.reload();
+            }, 2000);
         } catch (err) {
             const errorMsg = err.response?.data?.error
                 || err.response?.data?.message
@@ -73,6 +77,7 @@ export const ResourceForm = ({ resource, onClose }) => {
     };
 
     return (
+        <>
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-xl">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -217,5 +222,40 @@ export const ResourceForm = ({ resource, onClose }) => {
                 </form>
             </div>
         </div>
+
+            {/* Success Toast */}
+            {showToast && (
+                <div className="fixed top-6 left-0 right-0 z-[9999] flex justify-center pointer-events-none">
+                    <div className="animate-[slideDown_0.4s_ease_forwards]" style={{ minWidth: '320px' }}>
+                        <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white border border-green-100"
+                            style={{ boxShadow: '0 8px 32px 0 rgba(34,197,94,0.22), 0 2px 8px 0 rgba(0,0,0,0.08)' }}>
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
+                                <CheckCircle2 className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-bold text-gray-800 text-base leading-tight">Resource Saved!</p>
+                                <p className="text-sm text-gray-500 mt-0.5">Changes have been applied successfully.</p>
+                            </div>
+                            <div className="w-1.5 h-10 rounded-full bg-gradient-to-b from-green-400 to-emerald-500 ml-1" />
+                        </div>
+                        {/* Progress bar */}
+                        <div className="mt-1.5 h-1 rounded-full bg-green-100 overflow-hidden mx-2">
+                            <div className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-[shrink_2s_linear_forwards]" />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateY(-24px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes shrink {
+                    from { width: 100%; }
+                    to   { width: 0%; }
+                }
+            `}</style>
+        </>
     );
 };
