@@ -164,7 +164,7 @@ export const LoginPage = () => {
             if (response?.token && response?.user) {
                 setOtpRequestInFlight(false);
                 setSuccessMessage('Login successful! Redirecting…');
-                setTimeout(() => navigate(response.user.role === 'ADMIN' ? '/dashboard' : '/resources'), 500);
+                setTimeout(() => navigate('/dashboard'), 500);
                 return;
             }
 
@@ -202,7 +202,7 @@ export const LoginPage = () => {
         try {
             await verifyOtp({ email: pendingEmail, otp, mode });
             setSuccessMessage('Verified! Redirecting…');
-            setTimeout(() => navigate('/resources'), 800);
+            setTimeout(() => navigate('/dashboard'), 800);
         } catch (err) {
             setError(err.message || 'OTP verification failed');
             // Shake the boxes

@@ -6,10 +6,10 @@ import { BookingsPage } from './pages/BookingsPage';
 import { TicketsPage } from './pages/TicketsPage';
 import { QRVerificationPage } from './pages/QRVerificationPage';
 import { NotificationsPage } from './pages/NotificationsPage';
-import RoleSelectionPage from './pages/RoleSelectionPage';
 import { LandingPage } from './pages/LandingPage';
 import { AboutUsPage } from './pages/AboutUsPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { UserDashboard } from './pages/UserDashboard';
 import { UsersPage } from './pages/UsersPage';
 import {
   Bell, LayoutDashboard, CalendarDays, Ticket, Scan,
@@ -22,7 +22,7 @@ import './App.css';
 // ─── Page title resolver ────────────────────────────────────────────
 function usePageTitle(pathname) {
   const map = {
-    '/dashboard':     { title: 'Admin Dashboard',      icon: LayoutDashboard },
+    '/dashboard':     { title: 'Dashboard',             icon: LayoutDashboard },
     '/resources':     { title: 'Facilities & Assets',  icon: Building2 },
     '/bookings':      { title: 'Bookings',              icon: CalendarDays },
     '/tickets':       { title: 'Maintenance Tickets',  icon: Ticket },
@@ -36,7 +36,7 @@ function usePageTitle(pathname) {
 // ─── Sidebar ────────────────────────────────────────────────────────
 function Sidebar({ user, unreadCount, onLogout, showLogoutConfirm, setShowLogoutConfirm }) {
   const navItems = [
-    ...(user?.role === 'ADMIN' ? [{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }] : []),
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/resources',     label: 'Facilities',    icon: Building2    },
     { to: '/bookings',      label: 'Bookings',      icon: CalendarDays },
     { to: '/tickets',       label: 'Tickets',       icon: Ticket       },
@@ -203,7 +203,7 @@ function AppContent() {
     </div>
   );
 
-  const isPublicPage = ['/', '/about-us', '/login', '/select-role', '/verify-qr'].includes(location.pathname);
+  const isPublicPage = ['/', '/about-us', '/login', '/verify-qr'].includes(location.pathname);
   const showLayout = user && !isPublicPage;
 
   if (showLayout) {
@@ -213,9 +213,9 @@ function AppContent() {
         <TopHeader pathname={location.pathname} unreadCount={unreadCount} />
         <main className="app-main">
           <Routes>
-            {user?.role === 'ADMIN' && (
-              <Route path="/dashboard" element={<AdminDashboard />} />
-            )}
+            <Route path="/dashboard" element={
+              user?.role === 'ADMIN' ? <AdminDashboard /> : <UserDashboard />
+            } />
             <Route path="/resources"     element={<ResourcesPage />} />
             <Route path="/bookings"      element={<BookingsPage />} />
             <Route path="/tickets"       element={<TicketsPage />} />
@@ -225,9 +225,7 @@ function AppContent() {
               <Route path="/users" element={<UsersPage />} />
             )}
             <Route path="*" element={
-              user?.role === 'ADMIN'
-                ? <Navigate to="/dashboard" replace />
-                : <ResourcesPage />
+              <Navigate to="/dashboard" replace />
             } />
           </Routes>
         </main>
@@ -240,7 +238,6 @@ function AppContent() {
       <Route path="/"            element={<LandingPage />} />
       <Route path="/about-us"    element={<AboutUsPage />} />
       <Route path="/login"       element={<LoginPage />} />
-      <Route path="/select-role" element={<RoleSelectionPage />} />
       <Route path="/verify-qr"   element={<QRVerificationPage />} />
       <Route path="*"            element={<LoginPage />} />
     </Routes>
