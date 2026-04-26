@@ -65,10 +65,24 @@ export const TicketsPage = () => {
         <div className="min-h-[calc(100vh-4rem)] bg-slate-50 text-slate-800 font-sans">
             <div className="p-8 w-full max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                        {user.role === 'TECHNICIAN' ? 'Assigned Tickets' :
-                            user.role === 'ADMIN' ? 'All Tickets' : 'Maintenance Tickets'}
-                    </h1>
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                                {user.role === 'TECHNICIAN' ? 'Assigned Tickets' :
+                                    user.role === 'ADMIN' ? 'All Tickets' : 'Maintenance Tickets'}
+                            </h1>
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                                user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                                user.role === 'TECHNICIAN' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
+                                'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                            }`}>
+                                {user.role}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                ID: {user.id}
+                            </span>
+                        </div>
+                    </div>
                     <button
                         onClick={handleCreateNew}
                         className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 group"

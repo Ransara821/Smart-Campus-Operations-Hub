@@ -71,14 +71,19 @@ public class TicketController {
     public ResponseEntity<List<Ticket>> getTickets(@AuthenticationPrincipal OAuth2User principal,
                                                    @RequestParam(required = false) String context) {
         User user = getAuthenticatedUser(principal);
-        if (user == null) return ResponseEntity.status(401).build();
+        if (user == null) {
+            System.out.println("❌ Auth Failed: User not found for principal");
+            return ResponseEntity.status(401).build();
+        }
+
+        System.out.println("🔍 GET /api/tickets - User: " + user.getEmail() + " (ID: " + user.getId() + "), Role: " + user.getRole() + ", Context: " + context);
 
         if ("my-tickets".equals(context)) {
             return ResponseEntity.ok(ticketService.getUserTickets(user.getId()));
         } else if ("assigned".equals(context)) {
+            System.out.println("📋 Fetching assigned tickets for technician ID: " + user.getId());
             return ResponseEntity.ok(ticketService.getTechnicianTickets(user.getId()));
         } else {
-            // Suppose ADMIN or TECHNICIAN gets all
             return ResponseEntity.ok(ticketService.getAllTickets());
         }
     }
@@ -188,6 +193,7 @@ public class TicketController {
     @PatchMapping("/{id}/assign")
     public ResponseEntity<?> assignTechnician(@PathVariable String id, @RequestBody Map<String, String> body) {
         String technicianId = body.get("technicianId");
+        System.out.println("🎯 Assigning Ticket " + id + " to Technician " + technicianId);
         return ticketService.assignTechnician(id, technicianId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
