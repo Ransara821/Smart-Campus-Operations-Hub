@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Users, MapPin, Trash2, Check, AlertCircle, Power } from 'lucide-react';
+import { Edit2, Users, MapPin, Trash2, Check, AlertCircle, Power, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const ResourceCard = ({ resource, onEdit, onDelete }) => {
@@ -103,6 +103,19 @@ export const ResourceCard = ({ resource, onEdit, onDelete }) => {
 
                 {/* Divider */}
                 <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-4"></div>
+
+                {/* Description */}
+                {resource.description && (
+                    <div className="flex items-start gap-3 mb-4">
+                        <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
+                            <FileText className="w-4 h-4 text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500 font-medium">Description</p>
+                            <p className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">{resource.description}</p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Info Grid */}
                 <div className="space-y-3 mb-5">
