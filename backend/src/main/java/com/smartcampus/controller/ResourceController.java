@@ -24,8 +24,13 @@ public class ResourceController {
     }
 
     @GetMapping
-    public List<Resource> getAllResources(@RequestParam(required = false) String search) {
-        return resourceService.getAllResources(search);
+    public List<Resource> getAllResources(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Integer minCapacity,
+            @RequestParam(required = false) Integer maxCapacity,
+            @RequestParam(required = false) String location) {
+        return resourceService.getAllResources(search, type, minCapacity, maxCapacity, location);
     }
 
     @GetMapping("/{id}")

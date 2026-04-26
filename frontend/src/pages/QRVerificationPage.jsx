@@ -1,37 +1,101 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { QrCode, CheckCircle2, XCircle, Scan, AlertTriangle, Lock, Users } from 'lucide-react';
+import { QrCode, CheckCircle2, XCircle, Scan, AlertTriangle, Lock, Users, ShieldCheck, ArrowRight, RotateCcw, LayoutDashboard } from 'lucide-react';
+
+/* ─────────────── Floating Label Input ─────────────── */
+const FloatingInput = ({ id, label, type = 'text', value, onChange, placeholder, required, disabled, className = '', mono = false }) => (
+    <div className="relative w-full group">
+        <input
+            id={id}
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder=" "
+            required={required}
+            disabled={disabled}
+            className={`peer w-full px-5 pt-7 pb-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl text-white placeholder-transparent
+                focus:outline-none focus:border-indigo-400/70 focus:bg-white/8 focus:ring-0
+                disabled:opacity-40 disabled:cursor-not-allowed
+                transition-all duration-300 text-[15px] leading-tight
+                ${mono ? 'font-mono tracking-wider' : 'font-medium'}
+                ${className}`}
+        />
+        <label
+            htmlFor={id}
+            className="absolute left-5 top-3 text-[10px] font-bold tracking-[0.15em] uppercase text-indigo-300/80
+                peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:tracking-normal peer-placeholder-shown:text-white/30 peer-placeholder-shown:uppercase-none
+                peer-focus:top-3 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-[0.15em] peer-focus:text-indigo-300
+                transition-all duration-300 pointer-events-none"
+        >
+            {label}
+        </label>
+        {/* Glow on focus */}
+        <div className="absolute inset-0 rounded-2xl bg-indigo-500/0 peer-focus:bg-indigo-500/5 transition-all duration-500 pointer-events-none" />
+    </div>
+);
+
+/* ─────────────── Floating Label Textarea ─────────────── */
+const FloatingTextarea = ({ id, label, value, onChange, required, disabled, rows = 3 }) => (
+    <div className="relative w-full group">
+        <textarea
+            id={id}
+            value={value}
+            onChange={onChange}
+            placeholder=" "
+            rows={rows}
+            required={required}
+            disabled={disabled}
+            className="peer w-full px-5 pt-7 pb-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl text-white/90 placeholder-transparent
+                focus:outline-none focus:border-indigo-400/70 focus:bg-white/8 focus:ring-0
+                disabled:opacity-40 disabled:cursor-not-allowed
+                transition-all duration-300 text-[13px] font-mono tracking-wide resize-none leading-relaxed"
+        />
+        <label
+            htmlFor={id}
+            className="absolute left-5 top-3 text-[10px] font-bold tracking-[0.15em] uppercase text-indigo-300/80
+                peer-placeholder-shown:top-5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-medium peer-placeholder-shown:tracking-normal peer-placeholder-shown:text-white/30
+                peer-focus:top-3 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-[0.15em] peer-focus:text-indigo-300
+                transition-all duration-300 pointer-events-none"
+        >
+            {label}
+        </label>
+        {value && (
+            <span className="absolute right-4 bottom-3 text-[10px] font-bold text-white/20 font-mono">
+                {value.length}
+            </span>
+        )}
+    </div>
+);
+
+/* ─────────────── Detail Row ─────────────── */
+const DetailRow = ({ label, value, highlight, mono }) => (
+    <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-white/30">{label}</span>
+        <span className={`text-sm font-semibold leading-snug ${highlight ? highlight : 'text-white/90'} ${mono ? 'font-mono text-xs' : ''}`}>{value}</span>
+    </div>
+);
 
 export const QRVerificationPage = () => {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [qrData, setQrData] = useState('');
     const [verificationResult, setVerificationResult] = useState(null);
     const [loading, setLoading] = useState(false);
-    
-    // User identification for multi-student check-in
     const [userName, setUserName] = useState('');
     const [userEmail, setUserEmail] = useState('');
     const [studentId, setStudentId] = useState('');
     const [showUserForm, setShowUserForm] = useState(false);
 
-    // Auto-verify if QR code is in URL parameter
     useEffect(() => {
         let qrParam = searchParams.get('qrData');
         if (qrParam && !verificationResult) {
-            // If qrParam is a full URL (contains http), extract just the token
             if (qrParam.includes('http')) {
-                // Extract token from URL like: http://...verify-qr?qrData=TOKEN
                 const match = qrParam.match(/qrData=([^&]+)/);
-                if (match && match[1]) {
-                    qrParam = decodeURIComponent(match[1]);
-                    console.log('Extracted token from URL:', qrParam);
-                }
+                if (match && match[1]) qrParam = decodeURIComponent(match[1]);
             }
-            qrParam = qrParam.trim(); // Remove any whitespace
-            console.log('QR Data from URL:', qrParam);
+            qrParam = qrParam.trim();
             setQrData(qrParam);
-            // Show user form for multi-student check-ins
             setShowUserForm(true);
         }
     }, [searchParams, verificationResult]);
@@ -39,114 +103,48 @@ export const QRVerificationPage = () => {
     const verifyQRCode = async (dataToVerify, withUserInfo = false) => {
         let qrValue = dataToVerify || qrData;
         if (!qrValue.trim()) return;
-
-        // Clean the QR value - extract just the token if it's a full URL
-        qrValue = qrValue.trim(); // Remove whitespace
-        
+        qrValue = qrValue.trim();
         if (qrValue.includes('http') || qrValue.includes('verify-qr')) {
             const match = qrValue.match(/qrData=([^&]+)/);
-            if (match && match[1]) {
-                qrValue = decodeURIComponent(match[1]);
-                console.log('Cleaned QR token:', qrValue);
-            }
+            if (match && match[1]) qrValue = decodeURIComponent(match[1]);
         }
-        
-        // Additional cleanup - remove any remaining URL encoding artifacts
         qrValue = qrValue.trim();
-
         setLoading(true);
         try {
-            console.log('Verifying QR code:', qrValue);
-            
-            // Build query parameters
             let url = `/api/bookings/verify-qr?qrData=${encodeURIComponent(qrValue)}`;
-            
-            // Add user info if provided (for multi-student check-in)
             if (withUserInfo && userName.trim()) {
-                // Validate that Student ID is provided for multi-student check-ins
                 if (!studentId.trim() && !userEmail.trim()) {
                     alert('⚠️ Student ID or Email is required to prevent duplicate check-ins');
                     setLoading(false);
                     return;
                 }
-                
-                // Create a consistent userId: prefer studentId, then email
                 let userId;
-                if (studentId.trim()) {
-                    userId = studentId.trim().toUpperCase(); // Normalize student IDs to uppercase
-                } else if (userEmail.trim()) {
-                    userId = userEmail.trim().toLowerCase();
-                } else {
-                    // This should never happen due to validation above
-                    userId = userName.trim().toLowerCase().replace(/\s+/g, '-');
-                }
-                
+                if (studentId.trim()) userId = studentId.trim().toUpperCase();
+                else if (userEmail.trim()) userId = userEmail.trim().toLowerCase();
+                else userId = userName.trim().toLowerCase().replace(/\s+/g, '-');
                 url += `&userId=${encodeURIComponent(userId)}`;
                 url += `&userName=${encodeURIComponent(userName.trim())}`;
-                if (userEmail.trim()) {
-                    url += `&userEmail=${encodeURIComponent(userEmail.trim())}`;
-                }
-                if (studentId.trim()) {
-                    url += `&studentId=${encodeURIComponent(studentId.trim().toUpperCase())}`;
-                }
-                
-                console.log('🎫 Check-in attempt:');
-                console.log('   Name:', userName.trim());
-                console.log('   Student ID:', studentId.trim() || '(none)');
-                console.log('   Unique ID:', userId);
-                console.log('   Email:', userEmail.trim() || '(none)');
-                console.log('   URL:', url);
+                if (userEmail.trim()) url += `&userEmail=${encodeURIComponent(userEmail.trim())}`;
+                if (studentId.trim()) url += `&studentId=${encodeURIComponent(studentId.trim().toUpperCase())}`;
             }
-            
             const res = await axios.get(url);
-            console.log('✅ Check-in SUCCESS:', res.data);
-            
-            // Success - valid booking with check-in
-            setVerificationResult({
-                type: 'SUCCESS',
-                data: res.data
-            });
+            setVerificationResult({ type: 'SUCCESS', data: res.data });
             setShowUserForm(false);
         } catch (error) {
             const errorData = error.response?.data;
             const errorType = errorData?.error;
-            
             if (errorType === 'ACCESS_DENIED') {
-                setVerificationResult({
-                    type: 'ACCESS_DENIED',
-                    message: errorData.message
-                });
+                setVerificationResult({ type: 'ACCESS_DENIED', message: errorData.message });
             } else if (errorType === 'ALREADY_CHECKED_IN') {
-                setVerificationResult({
-                    type: 'ALREADY_CHECKED_IN',
-                    message: errorData.message,
-                    checkedInAt: errorData.checkedInAt,
-                    booking: errorData.booking,
-                    totalAttendees: errorData.totalAttendees,
-                    expectedAttendees: errorData.expectedAttendees
-                });
+                setVerificationResult({ type: 'ALREADY_CHECKED_IN', message: errorData.message, checkedInAt: errorData.checkedInAt, booking: errorData.booking, totalAttendees: errorData.totalAttendees, expectedAttendees: errorData.expectedAttendees });
             } else if (errorType === 'NOT_ALLOWED') {
-                setVerificationResult({
-                    type: 'NOT_ALLOWED',
-                    message: errorData.message,
-                    status: errorData.status
-                });
+                setVerificationResult({ type: 'NOT_ALLOWED', message: errorData.message, status: errorData.status });
             } else if (errorType === 'TOO_EARLY' || errorType === 'EXPIRED') {
-                setVerificationResult({
-                    type: 'TIME_ERROR',
-                    message: errorData.message,
-                    errorType: errorType
-                });
+                setVerificationResult({ type: 'TIME_ERROR', message: errorData.message, errorType: errorType });
             } else if (errorType === 'INVALID_QR') {
-                setVerificationResult({
-                    type: 'INVALID_QR',
-                    message: errorData.message
-                });
+                setVerificationResult({ type: 'INVALID_QR', message: errorData.message });
             } else {
-                setVerificationResult({
-                    type: 'INVALID_QR',
-                    message: error.response?.data?.message || 'This QR code is not recognized.'
-                });
+                setVerificationResult({ type: 'INVALID_QR', message: error.response?.data?.message || 'This QR code is not recognized.' });
             }
         } finally {
             setLoading(false);
@@ -155,422 +153,415 @@ export const QRVerificationPage = () => {
 
     const handleVerify = async (e) => {
         e.preventDefault();
-        
-        // Show user form before verifying if userName is empty
-        if (!userName.trim() && !verificationResult) {
-            setShowUserForm(true);
-            return;
-        }
-        
+        if (!userName.trim() && !verificationResult) { setShowUserForm(true); return; }
         verifyQRCode(null, true);
     };
-    
+
     const handleQuickVerify = (e) => {
         e.preventDefault();
-        // Quick verify without user info (for equipment bookings)
         verifyQRCode(null, false);
     };
 
     const resetForm = () => {
-        setQrData('');
-        setVerificationResult(null);
-        setUserName('');
-        setUserEmail('');
-        setStudentId('');
-        setShowUserForm(false);
+        setQrData(''); setVerificationResult(null); setUserName('');
+        setUserEmail(''); setStudentId(''); setShowUserForm(false);
     };
 
     const renderResult = () => {
         if (!verificationResult) return null;
-
         switch (verificationResult.type) {
-            case 'SUCCESS':
+            case 'SUCCESS': {
                 const booking = verificationResult.data.booking;
                 const checkedInAt = verificationResult.data.checkedInAt;
                 const attendanceMode = verificationResult.data.attendanceMode;
                 const totalAttendees = verificationResult.data.totalAttendees;
                 const expectedAttendees = verificationResult.data.expectedAttendees;
-                
                 return (
-                    <div className="text-center">
-                        <div className="w-28 h-28 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in-95 duration-300">
-                            <CheckCircle2 className="w-20 h-20 text-green-600" />
+                    <div className="flex flex-col items-center gap-6">
+                        {/* Icon */}
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-emerald-400/30 rounded-full blur-2xl scale-150"></div>
+                            <div className="relative w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-[1.75rem] flex items-center justify-center shadow-2xl shadow-emerald-500/40 animate-in zoom-in-75 duration-500">
+                                <CheckCircle2 className="w-12 h-12 text-white drop-shadow" />
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-green-600 mb-2">✅ Check-in Successful</h2>
-                        <p className="text-lg text-gray-600 mb-4">Access granted for this booking</p>
-                        
-                        {/* Show attendance count for multi-student check-ins */}
+                        <div className="text-center">
+                            <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-emerald-400/80 mb-1">Verified</p>
+                            <h2 className="text-3xl font-black text-white mb-1">Check-In Successful</h2>
+                            <p className="text-white/40 text-sm font-medium">Access has been granted for this booking</p>
+                        </div>
                         {attendanceMode === 'MULTI_STUDENT' && (
-                            <div className="mb-6 inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-full">
-                                <Users className="w-6 h-6 text-blue-600" />
-                                <span className="text-xl font-bold text-gray-800">
-                                    {totalAttendees} / {expectedAttendees} Students Checked In
-                                </span>
+                            <div className="flex items-center gap-3 px-5 py-2.5 bg-white/5 border border-white/10 rounded-full">
+                                <Users className="w-4 h-4 text-indigo-300" />
+                                <span className="text-sm font-bold text-white">{totalAttendees} / {expectedAttendees}</span>
+                                <span className="text-sm text-white/40">students checked in</span>
                             </div>
                         )}
-
-                        <div className="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 text-left max-w-lg mx-auto border-2 border-green-200 shadow-lg">
-                            <h3 className="font-bold text-xl text-gray-800 mb-4 pb-3 border-b border-green-200">Booking Details</h3>
-                            <div className="space-y-4">
-                                {userName && (
-                                    <div>
-                                        <span className="text-sm font-medium text-gray-500">Checked in as:</span>
-                                        <p className="font-bold text-lg text-green-600">{userName}</p>
-                                    </div>
-                                )}
-                                <div>
-                                    <span className="text-sm font-medium text-gray-500">QR Code:</span>
-                                    <p className="font-bold text-lg text-blue-600 font-mono break-all">{booking.qrValidationData}</p>
-                                </div>
-                                <div>
-                                    <span className="text-sm font-medium text-gray-500">Booking ID:</span>
-                                    <p className="font-semibold text-gray-800 font-mono">BK-{booking.id.substring(0, 8).toUpperCase()}</p>
-                                </div>
-                                <div>
-                                    <span className="text-sm font-medium text-gray-500">Resource:</span>
-                                    <p className="font-bold text-xl text-gray-900">{booking.resourceName}</p>
-                                </div>
-                                <div>
-                                    <span className="text-sm font-medium text-gray-500">Date & Time:</span>
-                                    <p className="font-semibold text-gray-800">
-                                        {new Date(booking.startTime).toLocaleDateString('en-CA')}, {new Date(booking.startTime).toLocaleTimeString('en-US', { 
-                                            hour: '2-digit', minute: '2-digit', hour12: false 
-                                        })}–{new Date(booking.endTime).toLocaleTimeString('en-US', { 
-                                            hour: '2-digit', minute: '2-digit', hour12: false 
-                                        })}
-                                    </p>
-                                </div>
-                                <div>
-                                    <span className="text-sm font-medium text-gray-500">Booked by:</span>
-                                    <p className="font-semibold text-gray-800">{booking.userName}</p>
-                                </div>
-                                <div>
-                                    <span className="text-sm font-medium text-gray-500">Purpose:</span>
-                                    <p className="font-semibold text-gray-800">{booking.purpose}</p>
-                                </div>
-                                <div className="pt-3 border-t border-green-200">
-                                    <span className="text-sm font-medium text-gray-500">Status:</span>
-                                    <p className="inline-block px-3 py-1 bg-green-600 text-white rounded-full text-sm font-bold ml-2">
-                                        CHECKED_IN
-                                    </p>
-                                </div>
-                                <div>
-                                    <span className="text-sm font-medium text-gray-500">Checked-in at:</span>
-                                    <p className="font-bold text-green-600">
-                                        {new Date(checkedInAt).toLocaleTimeString('en-US', {
-                                            hour: 'numeric', minute: '2-digit', hour12: true
-                                        })}
-                                    </p>
-                                </div>
+                        {/* Details Card */}
+                        <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
+                            {userName && <DetailRow label="Checked in as" value={userName} highlight="text-emerald-300 font-bold" />}
+                            <div className="grid grid-cols-2 gap-4">
+                                <DetailRow label="Booking ID" value={`BK-${booking.id.substring(0, 8).toUpperCase()}`} mono />
+                                <DetailRow label="Checked in at" value={new Date(checkedInAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} highlight="text-emerald-300" />
                             </div>
-                            <div className="mt-6 pt-4 border-t border-green-200">
-                                <p className="text-sm text-green-700 italic flex items-center gap-2">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Notification sent to user
-                                </p>
+                            <div className="w-full h-px bg-white/5"></div>
+                            <DetailRow label="Resource" value={booking.resourceName} highlight="text-white font-bold text-lg" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <DetailRow label="Booked by" value={booking.userName} />
+                                <DetailRow label="Purpose" value={booking.purpose} />
+                            </div>
+                            <DetailRow label="Date & Time" value={`${new Date(booking.startTime).toLocaleDateString('en-CA')} · ${new Date(booking.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}–${new Date(booking.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`} />
+                            <div className="flex items-center gap-2 pt-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                <span className="text-xs text-white/30 font-medium">Notification dispatched to the booking owner</span>
                             </div>
                         </div>
-                        
-                        {/* Check in another student button for multi-student mode */}
                         {attendanceMode === 'MULTI_STUDENT' && totalAttendees < expectedAttendees && (
-                            <button
-                                onClick={() => {
-                                    // Clear user info but keep QR data
-                                    setUserName('');
-                                    setUserEmail('');
-                                    setStudentId('');
-                                    setVerificationResult(null);
-                                    setShowUserForm(true);
-                                }}
-                                className="mt-6 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2 mx-auto"
-                            >
-                                <Users className="w-5 h-5" />
-                                Check in Another Student
+                            <button onClick={() => { setUserName(''); setUserEmail(''); setStudentId(''); setVerificationResult(null); setShowUserForm(true); }}
+                                className="flex items-center gap-2 px-6 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 rounded-2xl font-semibold transition-all">
+                                <Users className="w-4 h-4" /> Check In Another Student
                             </button>
                         )}
                     </div>
                 );
-
-            case 'ALREADY_CHECKED_IN':
-                const alreadyTotalAttendees = verificationResult.totalAttendees;
-                const alreadyExpectedAttendees = verificationResult.expectedAttendees;
+            }
+            case 'ALREADY_CHECKED_IN': {
+                const alreadyTotal = verificationResult.totalAttendees;
+                const alreadyExpected = verificationResult.expectedAttendees;
                 const existingStudentId = verificationResult.studentId;
                 const existingName = verificationResult.existingName;
-                
                 return (
-                    <div className="text-center">
-                        <div className="w-28 h-28 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in-95 duration-300">
-                            <AlertTriangle className="w-20 h-20 text-red-600" />
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-amber-400/25 rounded-full blur-2xl scale-150"></div>
+                            <div className="relative w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-[1.75rem] flex items-center justify-center shadow-2xl shadow-amber-500/30 animate-in zoom-in-75 duration-500">
+                                <AlertTriangle className="w-12 h-12 text-white" />
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-red-600 mb-2">⚠️ Duplicate Check-In Blocked</h2>
-                        
-                        {/* Enhanced error message */}
-                        <div className="bg-red-50 rounded-xl p-6 text-center max-w-lg mx-auto border-2 border-red-300 mb-6">
-                            <p className="text-lg font-semibold text-red-800 mb-3">
-                                {verificationResult.message}
-                            </p>
-                            
-                            {(existingStudentId || existingName) && (
-                                <div className="mt-4 pt-4 border-t border-red-300">
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Already Checked In As:</p>
-                                    {existingName && (
-                                        <p className="font-bold text-lg text-gray-900">👤 {existingName}</p>
-                                    )}
-                                    {existingStudentId && (
-                                        <p className="font-bold text-md text-blue-700 mt-1">🆔 Student ID: {existingStudentId}</p>
-                                    )}
-                                    <p className="text-xs text-gray-600 mt-2">
-                                        at {new Date(verificationResult.checkedInAt).toLocaleTimeString('en-US', {
-                                            hour: 'numeric', minute: '2-digit', hour12: true
-                                        })}
-                                    </p>
-                                </div>
-                            )}
+                        <div className="text-center">
+                            <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-amber-400/80 mb-1">Blocked</p>
+                            <h2 className="text-3xl font-black text-white mb-1">Duplicate Check-In</h2>
+                            <p className="text-white/40 text-sm">{verificationResult.message}</p>
                         </div>
-                        
-                        {/* Show attendance count if available */}
-                        {alreadyTotalAttendees !== undefined && (
-                            <div className="mb-6 inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-full">
-                                <Users className="w-6 h-6 text-yellow-600" />
-                                <span className="text-xl font-bold text-gray-800">
-                                    {alreadyTotalAttendees} / {alreadyExpectedAttendees} Students Checked In
-                                </span>
+                        {(existingStudentId || existingName) && (
+                            <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-5 space-y-3">
+                                <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-white/30">Already Registered</p>
+                                {existingName && <p className="text-lg font-bold text-white">👤 {existingName}</p>}
+                                {existingStudentId && <p className="text-sm font-mono text-indigo-300">🆔 {existingStudentId}</p>}
+                                <p className="text-xs text-white/30">{new Date(verificationResult.checkedInAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
                             </div>
                         )}
-                        
-                        {/* Info box */}
-                        <div className="bg-blue-50 rounded-xl p-4 text-left max-w-md mx-auto border border-blue-200 mt-4">
-                            <p className="text-sm text-blue-800 flex items-start gap-2">
-                                <span className="text-lg">ℹ️</span>
-                                <span>Each Student ID can only be used once per session to ensure accurate attendance tracking.</span>
-                            </p>
+                        {alreadyTotal !== undefined && (
+                            <div className="flex items-center gap-3 px-5 py-2.5 bg-white/5 border border-white/10 rounded-full">
+                                <Users className="w-4 h-4 text-amber-300" />
+                                <span className="text-sm font-bold text-white">{alreadyTotal} / {alreadyExpected}</span>
+                                <span className="text-sm text-white/40">students checked in</span>
+                            </div>
+                        )}
+                        <div className="w-full bg-indigo-500/10 border border-indigo-400/20 rounded-2xl p-4 text-sm text-indigo-200/70 leading-relaxed">
+                            ℹ️ Each Student ID can only be used once per session to ensure accurate attendance tracking.
                         </div>
-                        
-                        {/* Try another student button */}
-                        {alreadyTotalAttendees !== undefined && alreadyTotalAttendees < alreadyExpectedAttendees && (
-                            <button
-                                onClick={() => {
-                                    // Clear user info but keep QR data
-                                    setUserName('');
-                                    setUserEmail('');
-                                    setStudentId('');
-                                    setVerificationResult(null);
-                                    setShowUserForm(true);
-                                }}
-                                className="mt-6 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2 mx-auto"
-                            >
-                                <Users className="w-5 h-5" />
-                                Check in Different Student
+                        {alreadyTotal !== undefined && alreadyTotal < alreadyExpected && (
+                            <button onClick={() => { setUserName(''); setUserEmail(''); setStudentId(''); setVerificationResult(null); setShowUserForm(true); }}
+                                className="flex items-center gap-2 px-6 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 rounded-2xl font-semibold transition-all">
+                                <Users className="w-4 h-4" /> Check In Different Student
                             </button>
                         )}
                     </div>
                 );
-
+            }
             case 'INVALID_QR':
                 return (
-                    <div className="text-center">
-                        <div className="w-28 h-28 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in-95 duration-300">
-                            <XCircle className="w-20 h-20 text-red-600" />
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-rose-400/25 rounded-full blur-2xl scale-150"></div>
+                            <div className="relative w-24 h-24 bg-gradient-to-br from-rose-500 to-red-600 rounded-[1.75rem] flex items-center justify-center shadow-2xl shadow-rose-500/30 animate-in zoom-in-75 duration-500">
+                                <XCircle className="w-12 h-12 text-white" />
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-red-600 mb-2">❌ Invalid QR Code</h2>
-                        <div className="bg-red-50 rounded-xl p-6 max-w-md mx-auto border-2 border-red-200 mt-6">
-                            <p className="text-lg text-gray-700">{verificationResult.message}</p>
+                        <div className="text-center">
+                            <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-rose-400/80 mb-1">Invalid</p>
+                            <h2 className="text-3xl font-black text-white mb-1">QR Code Invalid</h2>
                         </div>
+                        <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-5 text-center text-white/50 text-sm leading-relaxed">{verificationResult.message}</div>
                     </div>
                 );
-
             case 'NOT_ALLOWED':
-                return (
-                    <div className="text-center">
-                        <div className="w-28 h-28 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in-95 duration-300">
-                            <XCircle className="w-20 h-20 text-red-600" />
-                        </div>
-                        <h2 className="text-3xl font-bold text-red-600 mb-2">❌ Not Allowed</h2>
-                        <div className="bg-red-50 rounded-xl p-6 max-w-md mx-auto border-2 border-red-200 mt-6">
-                            <p className="text-lg font-semibold text-gray-800 mb-2">Reason:</p>
-                            <p className="text-lg text-gray-700">{verificationResult.message}</p>
-                            {verificationResult.status && (
-                                <p className="mt-3 text-sm text-gray-600">Booking Status: <span className="font-bold">{verificationResult.status}</span></p>
-                            )}
-                        </div>
-                    </div>
-                );
-
             case 'TIME_ERROR':
                 return (
-                    <div className="text-center">
-                        <div className="w-28 h-28 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in-95 duration-300">
-                            <XCircle className="w-20 h-20 text-red-600" />
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-rose-400/25 rounded-full blur-2xl scale-150"></div>
+                            <div className="relative w-24 h-24 bg-gradient-to-br from-rose-500 to-red-600 rounded-[1.75rem] flex items-center justify-center shadow-2xl shadow-rose-500/30 animate-in zoom-in-75 duration-500">
+                                <XCircle className="w-12 h-12 text-white" />
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-red-600 mb-2">❌ Not Allowed</h2>
-                        <div className="bg-red-50 rounded-xl p-6 max-w-md mx-auto border-2 border-red-200 mt-6">
-                            <p className="text-lg text-gray-700">{verificationResult.message}</p>
+                        <div className="text-center">
+                            <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-rose-400/80 mb-1">Not Allowed</p>
+                            <h2 className="text-3xl font-black text-white mb-1">Access Denied</h2>
+                        </div>
+                        <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-5 space-y-2 text-center">
+                            <p className="text-white/60 text-sm leading-relaxed">{verificationResult.message}</p>
+                            {verificationResult.status && <p className="text-xs text-white/30 font-mono">Status: {verificationResult.status}</p>}
                         </div>
                     </div>
                 );
-
             case 'ACCESS_DENIED':
                 return (
-                    <div className="text-center">
-                        <div className="w-28 h-28 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in-95 duration-300">
-                            <Lock className="w-20 h-20 text-purple-600" />
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-violet-400/25 rounded-full blur-2xl scale-150"></div>
+                            <div className="relative w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-600 rounded-[1.75rem] flex items-center justify-center shadow-2xl shadow-violet-500/30 animate-in zoom-in-75 duration-500">
+                                <Lock className="w-12 h-12 text-white" />
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-purple-600 mb-2">🔒 Access Denied</h2>
-                        <div className="bg-purple-50 rounded-xl p-6 max-w-md mx-auto border-2 border-purple-200 mt-6">
-                            <p className="text-lg text-gray-700">{verificationResult.message}</p>
-                            <p className="text-sm text-gray-600 mt-3">Please login with appropriate permissions.</p>
+                        <div className="text-center">
+                            <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-violet-400/80 mb-1">Restricted</p>
+                            <h2 className="text-3xl font-black text-white mb-1">Access Restricted</h2>
+                        </div>
+                        <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-5 text-center space-y-2">
+                            <p className="text-white/60 text-sm">{verificationResult.message}</p>
+                            <p className="text-xs text-white/30">Please login with the appropriate permissions.</p>
                         </div>
                     </div>
                 );
-
-            default:
-                return null;
+            default: return null;
         }
     };
 
     return (
-        <div className="p-8 w-full max-w-4xl mx-auto">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">QR Code Verification</h1>
-                <p className="text-gray-600">Scan or enter QR code to verify booking check-in</p>
+        <div className="w-full min-h-screen flex items-start justify-center py-12 px-4 relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #1a1040 40%, #24243e 100%)' }}>
+
+            {/* Ambient orbs */}
+            <div className="pointer-events-none fixed inset-0 overflow-hidden">
+                <div className="absolute top-[-10%] left-[20%] w-[40vw] h-[40vw] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                <div className="absolute bottom-[-5%] right-[10%] w-[35vw] h-[35vw] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+                <div className="absolute top-[40%] left-[-5%] w-[25vw] h-[25vw] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+                {/* Subtle grid */}
+                <div className="absolute inset-0" style={{
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
+                    backgroundSize: '60px 60px'
+                }} />
             </div>
 
-            {!verificationResult ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                    <div className="flex flex-col items-center mb-8">
-                        <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                            <QrCode className="w-12 h-12 text-primary-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">
-                            {showUserForm ? 'Student Check-In' : 'Enter QR Code Data'}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            {showUserForm ? 'Please enter your details to check in' : 'Paste the QR code content below to verify'}
-                        </p>
-                    </div>
+            <div className="relative z-10 w-full max-w-lg mx-auto">
 
-                    <form onSubmit={handleVerify} className="max-w-md mx-auto space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                QR Code Data
-                            </label>
-                            <textarea
-                                value={qrData}
-                                onChange={e => setQrData(e.target.value)}
-                                placeholder="Paste QR code data here..."
-                                rows="3"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none font-mono text-sm"
-                                required
-                                disabled={showUserForm}
-                            ></textarea>
-                            {qrData && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Length: {qrData.length} characters
-                                </p>
-                            )}
-                        </div>
-                        
-                        {showUserForm && (
-                            <>
-                                <div className="border-t border-gray-200 pt-4">
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                                        <p className="text-sm font-medium text-blue-800 mb-1">
-                                            🔒 Unique Identifier Required
-                                        </p>
-                                        <p className="text-xs text-blue-600">
-                                            Student ID or Email is required to prevent duplicate check-ins
-                                        </p>
+                {/* ─── Top Nav ─── */}
+                <div className="flex items-center justify-start mb-6">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/dashboard')}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-indigo-300 hover:text-white text-xs font-semibold tracking-wide transition-all hover:scale-105"
+                        style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)' }}
+                    >
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                        Admin Panel
+                    </button>
+                </div>
+
+                {/* ─── Header ─── */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5"
+                        style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)' }}>
+                        <ShieldCheck className="w-3.5 h-3.5 text-indigo-300" />
+                        <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-indigo-300">Secure Access Portal</span>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-3"
+                        style={{ textShadow: '0 0 60px rgba(99,102,241,0.4)' }}>
+                        QR Verification
+                    </h1>
+                    <p className="text-white/35 font-medium max-w-xs mx-auto leading-relaxed text-sm">
+                        Authenticate campus resource bookings with secure token validation
+                    </p>
+                </div>
+
+                {/* ─── Main Card ─── */}
+                <div className="rounded-[2.5rem] overflow-hidden"
+                    style={{
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        backdropFilter: 'blur(40px)',
+                        boxShadow: '0 40px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07)'
+                    }}>
+
+                    {!verificationResult ? (
+                        <div className="p-8 md:p-10">
+                            {/* Card header */}
+                            <div className="flex flex-col items-center mb-10">
+                                <div className="relative mb-6 group cursor-default">
+                                    {/* Pulsing rings */}
+                                    <div className="absolute inset-0 rounded-[1.5rem] animate-ping opacity-10"
+                                        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', animationDuration: '2.5s' }} />
+                                    <div className="absolute -inset-2 rounded-[1.8rem] opacity-20 group-hover:opacity-40 transition-opacity duration-700"
+                                        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', filter: 'blur(16px)' }} />
+                                    <div className="relative w-20 h-20 flex items-center justify-center rounded-[1.5rem] group-hover:scale-105 transition-transform duration-500"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                                            boxShadow: '0 8px 32px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.15)'
+                                        }}>
+                                        <QrCode className="w-10 h-10 text-white drop-shadow-lg" />
                                     </div>
                                 </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Full Name <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={userName}
-                                        onChange={e => setUserName(e.target.value)}
-                                        placeholder="e.g., John Doe"
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                                        required
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Student ID <span className="text-red-500">* (Required)</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={studentId}
-                                        onChange={e => setStudentId(e.target.value)}
-                                        placeholder="e.g., 2024001234"
-                                        className="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-blue-50"
-                                        required={!userEmail.trim()}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Or provide Email below</p>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Email <span className="text-gray-400">(Alternative to Student ID)</span>
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={userEmail}
-                                        onChange={e => setUserEmail(e.target.value)}
-                                        placeholder="e.g., john.doe@university.edu"
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                                    />
-                                </div>
-                            </>
-                        )}
+                                <h2 className="text-xl font-black text-white mb-1.5 tracking-tight">
+                                    {showUserForm ? 'Student Identity' : 'Token Verification'}
+                                </h2>
+                                <p className="text-white/30 text-[13px] text-center max-w-xs leading-relaxed">
+                                    {showUserForm
+                                        ? 'Complete your identity details to finalize the check-in process.'
+                                        : 'Paste the secure QR payload below to authenticate this booking.'}
+                                </p>
+                            </div>
 
-                        <div className="flex gap-2">
-                            <button
-                                type="submit"
-                                disabled={loading || !qrData.trim() || (showUserForm && !userName.trim())}
-                                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition disabled:opacity-50"
-                            >
-                                <Scan className="w-5 h-5" />
-                                {loading ? 'Verifying...' : showUserForm ? 'Check In' : 'Next'}
-                            </button>
-                            
-                            {!showUserForm && qrData.trim() && (
-                                <button
-                                    type="button"
-                                    onClick={handleQuickVerify}
-                                    disabled={loading}
-                                    className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition disabled:opacity-50 text-sm"
-                                    title="For equipment bookings (single check-in)"
-                                >
-                                    Quick
-                                </button>
-                            )}
+                            <form onSubmit={handleVerify} className="space-y-5">
+                                {/* QR Textarea */}
+                                <FloatingTextarea
+                                    id="qrPayload"
+                                    label="QR Code Token"
+                                    value={qrData}
+                                    onChange={e => setQrData(e.target.value)}
+                                    required
+                                    disabled={showUserForm}
+                                    rows={3}
+                                />
+
+                                {/* Step indicator */}
+                                {qrData && !showUserForm && (
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                                        <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-white/20">
+                                            Step 1 of 2
+                                        </span>
+                                        <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                                    </div>
+                                )}
+
+                                {/* User fields */}
+                                {showUserForm && (
+                                    <div className="space-y-5 animate-in slide-in-from-bottom-6 fade-in duration-500">
+                                        {/* Identity Required banner */}
+                                        <div className="flex items-start gap-3 px-5 py-4 rounded-2xl"
+                                            style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                                            <Lock className="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-[11px] font-bold tracking-[0.15em] uppercase text-indigo-300 mb-0.5">
+                                                    Identity Required
+                                                </p>
+                                                <p className="text-[12px] text-white/35 leading-relaxed">
+                                                    Provide your Student ID or Email to prevent duplicate check-ins.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                                            <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-white/20">Step 2 of 2</span>
+                                            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                                        </div>
+
+                                        <FloatingInput
+                                            id="fullName"
+                                            label="Full Name *"
+                                            value={userName}
+                                            onChange={e => setUserName(e.target.value)}
+                                            required
+                                        />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <FloatingInput
+                                                id="studentId"
+                                                label="Student ID"
+                                                value={studentId}
+                                                onChange={e => setStudentId(e.target.value)}
+                                                required={!userEmail.trim()}
+                                                mono
+                                            />
+                                            <FloatingInput
+                                                id="email"
+                                                label="Email (Alt.)"
+                                                type="email"
+                                                value={userEmail}
+                                                onChange={e => setUserEmail(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action buttons */}
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={loading || !qrData.trim() || (showUserForm && !userName.trim())}
+                                        className="group relative flex-1 flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-white text-[15px] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden hover:scale-[1.02] active:scale-[0.98] hover:shadow-2xl"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                                            boxShadow: '0 8px 24px rgba(99,102,241,0.35)'
+                                        }}
+                                    >
+                                        {/* Shimmer */}
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                            style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%)' }} />
+                                        {loading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" />
+                                                <span className="relative z-10">Validating...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Scan className="w-4 h-4 relative z-10" />
+                                                <span className="relative z-10">{showUserForm ? 'Confirm Check-In' : 'Authenticate Token'}</span>
+                                                <ArrowRight className="w-4 h-4 relative z-10 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {!showUserForm && qrData.trim() && (
+                                        <button
+                                            type="button"
+                                            onClick={handleQuickVerify}
+                                            disabled={loading}
+                                            title="Express verify for equipment bookings"
+                                            className="px-5 py-4 rounded-2xl font-bold text-white/50 text-sm transition-all hover:text-white/80 active:scale-95 disabled:opacity-30"
+                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                                        >
+                                            Express
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Footer hint */}
+                                {!showUserForm && (
+                                    <p className="text-center text-[11px] text-white/20 font-medium pt-1">
+                                        "Authenticate" for student check-in · "Express" for equipment
+                                    </p>
+                                )}
+                            </form>
                         </div>
-                        
-                        {!showUserForm && (
-                            <p className="text-xs text-center text-gray-500 mt-2">
-                                💡 Click "Next" for student check-in or "Quick" for equipment
-                            </p>
-                        )}
-                    </form>
+                    ) : (
+                        <div className="p-8 md:p-10">
+                            {renderResult()}
+                            <div className="flex justify-center mt-8">
+                                <button
+                                    onClick={resetForm}
+                                    className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-white/60 hover:text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                    {verificationResult.type === 'SUCCESS' ? 'New Scan' : verificationResult.type === 'ALREADY_CHECKED_IN' ? 'Go Back' : 'Retry'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
-                    {renderResult()}
-                    
-                    <div className="flex justify-center mt-8 gap-4">
-                        <button
-                            onClick={resetForm}
-                            className="px-8 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition shadow-md"
-                        >
-                            {verificationResult.type === 'SUCCESS' ? 'Done' : verificationResult.type === 'ALREADY_CHECKED_IN' ? 'Back' : 'Try Again'}
-                        </button>
-                    </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-center gap-2 mt-6">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <p className="text-[11px] text-white/20 font-semibold tracking-wider uppercase">System Online</p>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

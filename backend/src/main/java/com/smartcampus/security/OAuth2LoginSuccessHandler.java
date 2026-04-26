@@ -74,7 +74,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     if (userOpt.isPresent()) {
       // --- EXISTING USER ---
       User user = userOpt.get();
-      user.setName(name);
       user.setAvatarUrl(picture);
       if (user.getGoogleId() == null && googleId != null) {
         user.setGoogleId(googleId);
@@ -102,14 +101,12 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
       log.info("New user created: {}, role: {}", email, assignedRole);
     }
 
-    // New users → role selection page
-    // Existing users with role → go directly to dashboard (no flashing!)
-    String redirectUrl;
-    if (isNewUser) {
-      redirectUrl = frontendSelectRoleUrl + "?token=" + token + "&new=true";
-    } else {
-      redirectUrl = frontendBaseUrl + "/resources?token=" + token;
-    }
+    // Both new and existing users → log in directly with JWT token
+    String role = isNewUser
+        ? (isAdminEmail(email) ? "ADMIN" : "USER")
+        : userOpt.get().getRole().name();
+    String landingPath = "ADMIN".equals(role) ? "/dashboard" : "/resources";
+    String redirectUrl = frontendBaseUrl + landingPath + "?token=" + token;
 
     log.info("Redirecting {} user {} to: {}", isNewUser ? "new" : "existing",
         email, redirectUrl.replace(token, "***"));
