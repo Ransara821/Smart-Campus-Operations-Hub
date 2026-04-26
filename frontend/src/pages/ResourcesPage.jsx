@@ -19,7 +19,11 @@ export const ResourcesPage = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingResource, setEditingResource] = useState(null);
 
-    const resourceTypes = ['Lecture Hall', 'Lab', 'Equipment', 'Meeting Room', 'Library'];
+    const resourceTypes = [
+        { value: 'LECTURE_HALL', label: 'Lecture Hall' },
+        { value: 'LAB', label: 'Lab' },
+        { value: 'EQUIPMENT', label: 'Equipment' },
+    ];
 
     useEffect(() => {
         fetchResources();
@@ -177,7 +181,7 @@ export const ResourcesPage = () => {
                                 >
                                     <option value="">All Types</option>
                                     {resourceTypes.map(type => (
-                                        <option key={type} value={type}>{type}</option>
+                                        <option key={type.value} value={type.value}>{type.label}</option>
                                     ))}
                                 </select>
                             </div>
