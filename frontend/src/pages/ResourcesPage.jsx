@@ -174,23 +174,20 @@ export const ResourcesPage = () => {
                     <div className="mb-8 overflow-hidden rounded-2xl border border-gray-100 shadow-lg"
                         style={{ animation: 'slideDown 0.3s ease forwards' }}>
 
-                        {/* Panel header */}
                         <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Filter className="w-4 h-4 text-white/80" />
                                 <span className="text-white font-bold tracking-wide text-sm uppercase">Filter Resources</span>
                             </div>
                             {hasActiveFilters && (
-                                <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                                    Active
-                                </span>
+                                <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-1 rounded-full">Active</span>
                             )}
                         </div>
 
                         <div className="bg-white px-6 py-5">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-                                {/* Resource Type */}
+                                {/* Type */}
                                 <div className="space-y-1.5">
                                     <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                                         <Building2 className="w-3 h-3" /> Type
@@ -202,13 +199,13 @@ export const ResourcesPage = () => {
                                         className="w-full px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 outline-none focus:border-blue-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] transition-all appearance-none cursor-pointer"
                                     >
                                         <option value="">All Types</option>
-                                        {resourceTypes.map(type => (
-                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        {resourceTypes.map(t => (
+                                            <option key={t.value} value={t.value}>{t.label}</option>
                                         ))}
                                     </select>
                                 </div>
 
-                                {/* Capacity range */}
+                                {/* Capacity Range */}
                                 <div className="space-y-1.5">
                                     <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                                         <Users className="w-3 h-3" /> Capacity Range
