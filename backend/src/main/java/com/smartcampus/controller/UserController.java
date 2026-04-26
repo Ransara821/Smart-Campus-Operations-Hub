@@ -27,6 +27,11 @@ public class UserController {
         return ResponseEntity.ok(userRepository.findAll());
     }
 
+    @GetMapping("/technicians")
+    public ResponseEntity<List<User>> getAllTechnicians() {
+        return ResponseEntity.ok(userRepository.findByRole(Role.TECHNICIAN));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody Map<String, Object> updates, Authentication authentication) {
         Optional<User> userOpt = userRepository.findById(id);

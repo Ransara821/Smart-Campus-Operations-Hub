@@ -462,14 +462,30 @@ export const TicketDetailsModal = ({ ticket, onClose }) => {
                                 </select>
                             )}
                             {user.role === 'ADMIN' && (
-                                <select
-                                    onChange={(e) => handleAssign(e.target.value)}
-                                    value={ticket.assignedTechnicianId || ''}
-                                    className="text-sm border border-purple-200 p-1.5 rounded-xl font-bold bg-purple-50 text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm cursor-pointer hover:bg-purple-100"
-                                >
-                                    <option value="" disabled className="bg-white">Assign Tech...</option>
-                                    <option value="dev-tech-789" className="bg-white">Campus Technician (dev-tech-789)</option>
-                                </select>
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        onChange={(e) => handleAssign(e.target.value)}
+                                        value={ticket.assignedTechnicianId || ''}
+                                        className="text-sm border border-purple-200 p-1.5 rounded-xl font-bold bg-purple-50 text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm cursor-pointer hover:bg-purple-100 min-w-[180px]"
+                                    >
+                                        <option value="" disabled className="bg-white">
+                                            {loadingTechs ? 'Loading Users...' : errorTechs ? errorTechs : 'Assign Tech...'}
+                                        </option>
+                                        
+                                        {technicians.map(tech => (
+                                            <option key={tech.id} value={tech.id} className="bg-white">
+                                                {tech.name} [{tech.role}]
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); fetchAllUsers(); }}
+                                        className="p-1.5 hover:bg-purple-100 rounded-lg text-purple-600 transition-colors"
+                                        title="Refresh User List"
+                                    >
+                                        <RefreshCw className={`w-4 h-4 ${loadingTechs ? 'animate-spin' : ''}`} />
+                                    </button>
+                                </div>
                             )}
                             {user.id === ticket.creatorId && status === 'OPEN' && (
                                 <>
