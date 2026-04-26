@@ -109,10 +109,10 @@ export const LandingPage = () => {
     };
 
     const heroStats = [
-        { value: '2,400+', label: 'Campus Users' },
-        { value: '98%', label: 'Uptime' },
-        { value: '4 Modules', label: 'Fully Integrated' },
-        { value: '< 2 min', label: 'Avg Response Time' }
+        { value: '2,400+', label: 'Campus Users',     icon: Users,       accent: '#8b5cf6', gradient: 'from-violet-500 to-purple-600',  bg: 'from-violet-50 to-purple-50',  trend: '+12%', trendLabel: 'this semester' },
+        { value: '98%',    label: 'Uptime',           icon: Zap,         accent: '#06b6d4', gradient: 'from-cyan-500 to-teal-500',    bg: 'from-cyan-50 to-teal-50',      trend: '↑ stable', trendLabel: 'all systems go' },
+        { value: '4',      label: 'Modules',          icon: LayoutGrid,  accent: '#d946ef', gradient: 'from-fuchsia-500 to-pink-500', bg: 'from-fuchsia-50 to-pink-50',   trend: 'Fully', trendLabel: 'integrated' },
+        { value: '< 2min', label: 'Avg Response',     icon: CheckCircle2,accent: '#22c55e', gradient: 'from-emerald-500 to-green-500',bg: 'from-emerald-50 to-green-50',  trend: '↓ fast', trendLabel: 'and improving' },
     ];
 
     const pulseCards = [
@@ -293,12 +293,37 @@ export const LandingPage = () => {
                                 </div>
 
                                 <div className="mt-14 grid gap-4 border-t border-violet-100 pt-8 sm:grid-cols-2 xl:grid-cols-4">
-                                    {heroStats.map((stat) => (
-                                        <div key={stat.label} className="rounded-2xl border border-violet-100 bg-white/75 px-5 py-4 shadow-[0_16px_40px_rgba(139,92,246,0.08)] backdrop-blur-sm">
-                                            <div className="text-3xl font-black tracking-tight text-slate-900">{stat.value}</div>
-                                            <div className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-violet-500">{stat.label}</div>
+                                    {heroStats.map((stat) => {
+                                        const Icon = stat.icon;
+                                        return (
+                                        <div key={stat.label}
+                                            className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br ${stat.bg} p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-default`}
+                                            style={{ borderColor: `${stat.accent}30`, boxShadow: `0 8px 32px ${stat.accent}18` }}
+                                        >
+                                            {/* Glow orb */}
+                                            <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full opacity-20 blur-2xl transition-opacity duration-300 group-hover:opacity-40"
+                                                style={{ background: stat.accent }} />
+                                            {/* Icon badge */}
+                                            <div className={`mb-3 inline-flex items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} p-2.5 shadow-lg`}>
+                                                <Icon className="h-4 w-4 text-white" />
+                                            </div>
+                                            {/* Value */}
+                                            <div className={`bg-gradient-to-r ${stat.gradient} bg-clip-text text-3xl font-black tracking-tight text-transparent`}>
+                                                {stat.value}
+                                            </div>
+                                            {/* Label */}
+                                            <div className="mt-0.5 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{stat.label}</div>
+                                            {/* Trend */}
+                                            <div className="mt-3 flex items-center gap-1.5">
+                                                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                                                    style={{ background: `${stat.accent}18`, color: stat.accent }}>
+                                                    {stat.trend}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400">{stat.trendLabel}</span>
+                                            </div>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
