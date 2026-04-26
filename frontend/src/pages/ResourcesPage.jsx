@@ -129,25 +129,23 @@ export const ResourcesPage = () => {
                     </div>
                 </div>
 
-                {/* Search Bar */}
-                <div className="relative mb-6 max-w-2xl">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Search className="text-blue-400 w-5 h-5" />
+                {/* Search Bar + Filters Toggle */}
+                <div className="mb-6 flex items-center gap-3 max-w-2xl">
+                    <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Search className="text-blue-400 w-5 h-5" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search resources by name or location..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-12 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400 shadow-sm hover:shadow-md"
+                        />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Search resources by name or location..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-12 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-blue-500 outline-none transition-colors text-gray-700 placeholder-gray-400 shadow-sm hover:shadow-md"
-                    />
-                </div>
-
-                {/* Advanced Filters Toggle */}
-                <div className="mb-6 flex items-center gap-3">
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-lg text-gray-700 font-medium hover:border-blue-500 hover:text-blue-600 transition-all"
+                        className="flex items-center gap-2 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-medium hover:border-blue-500 hover:text-blue-600 transition-all whitespace-nowrap shadow-sm hover:shadow-md"
                     >
                         <Filter className="w-4 h-4" />
                         Advanced Filters
