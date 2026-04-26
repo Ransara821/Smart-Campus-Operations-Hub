@@ -441,7 +441,7 @@ export const LoginPage = () => {
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="w-full flex items-center justify-center gap-2 px-6 py-3 mt-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                        className="w-full flex items-center justify-center gap-2 px-6 py-3 mt-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 disabled:from-violet-300 disabled:to-purple-300 text-white font-bold rounded-xl transition-all shadow-md shadow-violet-200 hover:shadow-lg hover:shadow-violet-300 hover:-translate-y-0.5"
                                     >
                                         {submitting ? (
                                             <><RefreshCw className="w-4 h-4 animate-spin" /> Sending OTP…</>
