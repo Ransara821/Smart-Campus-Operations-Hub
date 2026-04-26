@@ -81,8 +81,19 @@ export const TicketDetailsModal = ({ ticket, onClose }) => {
                 console.log('Fetched technicians for assignment:', res.data);
                 setTechnicians(res.data);
             } catch (err) {
-                console.error('Failed to fetch users:', err);
-                setErrorTechs('Failed to load users');
+                console.warn('Failed to fetch /api/users/technicians, falling back to /api/users', err);
+                try {
+                    const usersRes = await axios.get('/api/users', { withCredentials: true });
+                    const techUsers = (usersRes.data || []).filter(u => u.role === 'TECHNICIAN');
+                    setTechnicians(techUsers);
+                    if (techUsers.length === 0) {
+                        setErrorTechs('No technicians found');
+                    }
+                } catch (fallbackErr) {
+                    console.error('Failed to fetch users (fallback):', fallbackErr);
+                    setTechnicians([]);
+                    setErrorTechs('Failed to load users');
+                }
             } finally {
                 setLoadingTechs(false);
             }
@@ -504,12 +515,8 @@ export const TicketDetailsModal = ({ ticket, onClose }) => {
                                         <option value="" disabled className="bg-white">
                                             {loadingTechs ? 'Loading Users...' : errorTechs ? errorTechs : 'Assign Tech...'}
                                         </option>
-                                        
-                                        {/* Fallback dev technician */}
-                                        <option value="dev-tech-789" className="bg-white">Campus Technician (dev-tech-789)</option>
-                                        
-                                        {/* Dynamic users from DB */}
-                                        {technicians.filter(t => t.id !== 'dev-tech-789').map(tech => (
+
+                                        {technicians.map(tech => (
                                             <option key={tech.id} value={tech.id} className="bg-white">
                                                 {tech.name} [{tech.role}]
                                             </option>
