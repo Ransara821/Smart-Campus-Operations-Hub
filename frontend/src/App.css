@@ -754,6 +754,25 @@
   font-style: italic;
 }
 
+/* ── Notification Row (User Dashboard) ── */
+.notif-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.notif-row:last-child { border-bottom: none; }
+.notif-unread { background: #fafbff; border-radius: 8px; padding: 10px 8px; margin: 0 -8px; }
+.notif-dot-col { width: 16px; display: flex; justify-content: center; padding-top: 5px; flex-shrink: 0; }
+.notif-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; display: block; }
+.empty-cta {
+  background: none; border: none; cursor: pointer;
+  color: #06b6d4; font-weight: 600; font-size: inherit;
+  padding: 0; text-decoration: underline;
+}
+.empty-cta:hover { color: #0284c7; }
+
 /* ── Charts Grid ── */
 .admin-charts-grid {
   display: grid;

@@ -18,6 +18,10 @@ export const AuthProvider = ({ children }) => {
             
             if (tokenFromUrl) {
                 localStorage.setItem('auth_token', tokenFromUrl);
+                if (window.location.pathname !== '/dashboard') {
+                    window.location.replace('/dashboard');
+                    return;
+                }
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
